@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kana Writing Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f1e7;--card:#fffdf8;--ink:#1f1b16;--muted:#7a7166;--line:#e4dccd;--accent:#c8402b;--accent-soft:#f8e2db;--btn:#1f1b16;--btn-ink:#fffdf8}
+@media (prefers-color-scheme:dark){:root{--bg:#17150f;--card:#221f18;--ink:#f3ede2;--muted:#a39a8c;--line:#3a352b;--accent:#e8694f;--accent-soft:#3d2520;--btn:#f3ede2;--btn-ink:#17150f}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;display:flex;flex-direction:column;min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;gap:12px;flex-wrap:wrap}
+.brand{font-weight:800;display:flex;align-items:center;gap:10px;font-size:18px}
+.seal{width:32px;height:32px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:'Klee One',serif;font-weight:600;font-size:20px}
+.hright{display:flex;align-items:center;gap:14px}
+.progress{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:800}
+.badge{font-size:12px;font-weight:800;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:2px 8px;margin-left:6px}
+.iconbtn{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 20px 28px;gap:18px}
+.bar{width:min(720px,100%);height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar>div{height:100%;background:var(--accent);width:0;transition:width .25s}
+.card{width:min(720px,100%);background:var(--card);border:1px solid var(--line);border-radius:24px;padding:48px 20px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:min(58vh,520px);position:relative}
+.rowtag{position:absolute;top:16px;left:20px;font-size:15px;font-weight:800;color:var(--muted)}
+.scripttag{position:absolute;top:13px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:800;letter-spacing:.04em;padding:3px 12px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.scripttag.kata{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.tile .st{position:absolute;top:6px;right:9px;font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase}
+.peektag{position:absolute;top:16px;right:20px;font-size:13px;font-weight:800;color:var(--accent)}
+.romaji{font-size:clamp(5rem,22vw,13rem);font-weight:800;line-height:1}
+.romaji.kanaface{font-family:'Klee One',serif;font-weight:600;font-size:clamp(5rem,20vw,12rem);line-height:1.1}
+.kana.latin{font-family:Nunito,system-ui,sans-serif;font-weight:800}
+.seg.mini button{padding:7px 12px;font-size:15px}
+.romaji.msg{font-size:clamp(2.2rem,7vw,3.6rem)}
+.sub{color:var(--muted);margin-top:14px;font-weight:600;text-align:center;max-width:460px;line-height:1.5}
+.kana{font-family:'Klee One',serif;font-weight:600;font-size:clamp(4rem,15vw,8.5rem);line-height:1.15;color:var(--accent);min-height:1.2em;margin-top:8px;visibility:hidden}
+.kana.on{visibility:visible}
+.controls{display:grid;grid-template-columns:1fr 2fr;gap:12px;width:min(720px,100%)}
+.controls2{display:flex;gap:12px;width:min(720px,100%)}
+.controls2 button{flex:1}
+button.big{font:inherit;font-size:21px;font-weight:800;padding:18px 12px;border-radius:16px;border:2px solid var(--btn);cursor:pointer}
+.primary{background:var(--btn);color:var(--btn-ink)}
+.ghost{background:transparent;color:var(--ink)}
+.ghost.peeking{background:var(--accent);border-color:var(--accent);color:#fff}
+button.small{font:inherit;font-weight:700;font-size:16px;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button:disabled{opacity:.35;cursor:not-allowed}
+kbd{font-family:inherit;font-size:.68em;font-weight:800;opacity:.55;margin-left:8px;border:1px solid currentColor;border-radius:5px;padding:0 5px;vertical-align:2px}
+@media (hover:none){kbd{display:none}}
+.armed{color:var(--accent)!important;border-color:var(--accent)!important}
+/* reveal */
+.reveal{width:min(980px,100%);display:none}
+.reveal.on{display:block}
+.reveal h2{margin:0;font-size:28px}
+.reveal .meta{color:var(--muted);font-weight:600;margin-top:4px}
+.legend{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--accent-soft);border:1px solid var(--accent);vertical-align:-1px;margin:0 4px 0 2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin:20px 0}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 8px 10px;text-align:center;position:relative}
+.tile .n{position:absolute;top:6px;left:9px;font-size:11px;color:var(--muted);font-weight:800}
+.tile .k{font-family:'Klee One',serif;font-weight:600;font-size:46px;line-height:1.15}
+.tile .r{font-weight:800;color:var(--muted);font-size:17px}
+.tile.peeked{border-color:var(--accent);background:var(--accent-soft)}
+.tile.peeked .r{color:var(--accent)}
+.rbtns{display:flex;gap:12px;flex-wrap:wrap}
+.rbtns button{flex:1;min-width:180px}
+.drill{display:contents}
+.drill.off{display:none}
+/* settings */
+.overlay{position:fixed;inset:0;background:rgba(10,8,5,.45);display:none;align-items:flex-start;justify-content:center;padding:4vh 14px;overflow:auto;z-index:10}
+.overlay.open{display:flex}
+.panel{background:var(--card);color:var(--ink);border-radius:20px;width:min(660px,100%);padding:22px 22px 18px}
+.phead{display:flex;justify-content:space-between;align-items:center}
+.phead h2{margin:0;font-size:22px}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.opt .lbl{font-weight:800}
+.opt .hint{color:var(--muted);font-size:14px;font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:none;background:none;padding:9px 14px;font:inherit;font-weight:700;color:var(--ink);cursor:pointer}
+.seg button.on{background:var(--btn);color:var(--btn-ink)}
+.group{padding:14px 0;border-bottom:1px solid var(--line)}
+.ghead{display:flex;justify-content:space-between;align-items:center}
+.ghead .lbl{font-weight:800}
+.link{background:none;border:none;color:var(--accent);font:inherit;font-weight:800;cursor:pointer;padding:4px 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:99px;padding:7px 12px;cursor:pointer;font:inherit;font-weight:700;display:inline-flex;gap:7px;align-items:center}
+.chip .kh{font-family:'Klee One',serif;font-weight:600;font-size:17px}
+.chip.on{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.pfoot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.pfoot .count{color:var(--muted);font-weight:700}
+.pfoot .primary{font:inherit;font-weight:800;font-size:17px;padding:13px 20px;border-radius:12px;border:2px solid var(--btn);cursor:pointer}
+.controls{grid-template-columns:1fr 1fr 1.6fr}
+.again{background:transparent;color:var(--ink);border-color:var(--line)!important}
+.tile .tg{position:absolute;bottom:4px;right:8px;font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase}
+.rounds{display:grid;gap:10px;margin-top:16px}
+.rcard{text-align:left;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer}
+.rcard:hover:not(:disabled){border-color:var(--ink)}
+.rcard b{display:block;font-size:18px}
+.rcard span{color:var(--muted);font-weight:600;font-size:14px}
+.weak{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.wchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.wchip{border:1px solid var(--line);border-radius:10px;padding:4px 10px;text-align:center;min-width:54px}
+.wchip .kh{font-family:'Klee One',serif;font-weight:600;font-size:22px;display:block;line-height:1.2}
+.wchip .r{font-size:12px;font-weight:800;color:var(--muted)}
+.wchip .dots{display:block;height:4px;border-radius:2px;background:var(--accent);margin:4px auto 0}
+.empty{color:var(--muted);font-weight:600;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="seal" id="seal">あ</span><span id="brandName">Hiragana Drill</span></div>
+  <div class="hright">
+    <div class="seg mini" id="modeSeg" title="Switch mode (M)"><button data-v="write">Write</button><button data-v="read">Read</button></div>
+    <span class="progress" id="progress">0 / 0</span>
+    <button class="iconbtn" id="roundsBtn">Rounds</button>
+    <button class="iconbtn" id="settingsBtn">Settings</button>
+  </div>
+</header>
+
+<main>
+  <div class="bar"><div id="barFill"></div></div>
+
+  <section class="drill" id="drill">
+    <div class="card" id="card">
+      <div class="rowtag" id="rowtag"></div>
+      <div class="scripttag" id="scripttag"></div>
+      <div class="peektag" id="peektag"></div>
+      <div class="romaji" id="romaji"></div>
+      <div class="sub" id="sub"></div>
+      <div class="kana" id="kana"></div>
+    </div>
+    <div class="controls">
+      <button class="big ghost" id="peekBtn">Peek<kbd>P</kbd></button>
+      <button class="big ghost again" id="againBtn">Show again<kbd>A</kbd></button>
+      <button class="big primary" id="nextBtn">Next<kbd>Space</kbd></button>
+    </div>
+    <div class="controls2">
+      <button class="small" id="revealBtn">Reveal all<kbd>E</kbd></button>
+      <button class="small" id="resetBtn">Reset<kbd>R</kbd></button>
+    </div>
+  </section>
+
+  <section class="reveal" id="reveal">
+    <h2 id="rTitle">Your round</h2>
+    <div class="meta" id="rMeta"></div>
+    <div class="grid" id="grid"></div>
+    <div class="rbtns">
+      <button class="small" id="backBtn">Back to round<kbd>Esc</kbd></button>
+      <button class="small" id="missBtn">Practice misses</button>
+      <button class="small" id="newBtn">New round<kbd>R</kbd></button>
+      <button class="small" id="otherBtn">Other rounds…</button>
+    </div>
+  </section>
+</main>
+
+<div class="overlay" id="roundsOverlay">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="rdTitle">
+    <div class="phead"><h2 id="rdTitle">Start a round</h2><button class="link" data-close>Close ✕</button></div>
+    <div class="rounds">
+      <button class="rcard" id="rFull"><b>Full round</b><span id="rFullHint"></span></button>
+      <button class="rcard" id="rLook"><b>Look-alike drill</b><span id="rLookHint"></span></button>
+      <button class="rcard" id="rWeak"><b>Weak spots</b><span id="rWeakHint"></span></button>
+    </div>
+    <div class="weak">
+      <div class="ghead"><span class="lbl" style="font-weight:800">Your weak spots</span><button class="link" id="clearWeak">Clear history</button></div>
+      <div class="wchips" id="weakChips"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <div class="phead"><h2 id="sTitle">Settings</h2><button class="link" data-close>Close ✕</button></div>
+    <div class="opt">
+      <div><div class="lbl">Script</div><div class="hint">Both: each sound appears once as hiragana and once as katakana.</div></div>
+      <div class="seg" id="scriptSeg"><button data-v="h">Hiragana</button><button data-v="k">Katakana</button><button data-v="both">Both</button></div>
+    </div>
+    <div class="opt">
+      <div><div class="lbl">Order</div><div class="hint">By row: finish one shuffled row before the next.</div></div>
+      <div class="seg" id="orderSeg"><button data-v="row">By row</button><button data-v="mixed">Fully mixed</button></div>
+    </div>
+    <div class="opt">
+      <div><div class="lbl">Show row name</div><div class="hint">Writing mode only. Shows e.g. "da-row" so ji/zu (ぢ/づ vs じ/ず) are clear.</div></div>
+      <div class="seg" id="rowSeg"><button data-v="1">On</button><button data-v="0">Off</button></div>
+    </div>
+    <div id="groups"></div>
+    <div class="pfoot">
+      <span class="count" id="selCount"></span>
+      <button class="primary" id="applyBtn" style="background:var(--btn);color:var(--btn-ink)">Start new round</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Data ----------
+const GROUPS = [
+  {id:'basic', name:'Basic', rows:[
+    ['a',[['a','あ'],['i','い'],['u','う'],['e','え'],['o','お']]],
+    ['ka',[['ka','か'],['ki','き'],['ku','く'],['ke','け'],['ko','こ']]],
+    ['sa',[['sa','さ'],['shi','し'],['su','す'],['se','せ'],['so','そ']]],
+    ['ta',[['ta','た'],['chi','ち'],['tsu','つ'],['te','て'],['to','と']]],
+    ['na',[['na','な'],['ni','に'],['nu','ぬ'],['ne','ね'],['no','の']]],
+    ['ha',[['ha','は'],['hi','ひ'],['fu','ふ'],['he','へ'],['ho','ほ']]],
+    ['ma',[['ma','ま'],['mi','み'],['mu','む'],['me','め'],['mo','も']]],
+    ['ya',[['ya','や'],['yu','ゆ'],['yo','よ']]],
+    ['ra',[['ra','ら'],['ri','り'],['ru','る'],['re','れ'],['ro','ろ']]],
+    ['wa',[['wa','わ'],['wo','を'],['n','ん']]],
+  ]},
+  {id:'dakuten', name:'Dakuten & handakuten', rows:[
+    ['ga',[['ga','が'],['gi','ぎ'],['gu','ぐ'],['ge','げ'],['go','ご']]],
+    ['za',[['za','ざ'],['ji','じ'],['zu','ず'],['ze','ぜ'],['zo','ぞ']]],
+    ['da',[['da','だ'],['ji','ぢ'],['zu','づ'],['de','で'],['do','ど']]],
+    ['ba',[['ba','ば'],['bi','び'],['bu','ぶ'],['be','べ'],['bo','ぼ']]],
+    ['pa',[['pa','ぱ'],['pi','ぴ'],['pu','ぷ'],['pe','ぺ'],['po','ぽ']]],
+  ]},
+  {id:'combo', name:'Combinations (yōon)', rows:[
+    ['kya',[['kya','きゃ'],['kyu','きゅ'],['kyo','きょ']]],
+    ['sha',[['sha','しゃ'],['shu','しゅ'],['sho','しょ']]],
+    ['cha',[['cha','ちゃ'],['chu','ちゅ'],['cho','ちょ']]],
+    ['nya',[['nya','にゃ'],['nyu','にゅ'],['nyo','にょ']]],
+    ['hya',[['hya','ひゃ'],['hyu','ひゅ'],['hyo','ひょ']]],
+    ['mya',[['mya','みゃ'],['myu','みゅ'],['myo','みょ']]],
+    ['rya',[['rya','りゃ'],['ryu','りゅ'],['ryo','りょ']]],
+    ['gya',[['gya','ぎゃ'],['gyu','ぎゅ'],['gyo','ぎょ']]],
+    ['ja',[['ja','じゃ'],['ju','じゅ'],['jo','じょ']]],
+    ['bya',[['bya','びゃ'],['byu','びゅ'],['byo','びょ']]],
+    ['pya',[['pya','ぴゃ'],['pyu','ぴゅ'],['pyo','ぴょ']]],
+  ]},
+];
+// Sets of characters that are easy to confuse; each set is drilled together
+const LOOKALIKES = {
+  h: ['ぬめ','われね','るろ','さちき','はほけ','いりこ','あお','まも'],
+  k: ['シツ','ソン','クタケ','ウワ','フラヲ','スヌ','コユロ','チテ','ノメナ','アマ','ルレ','ヤセ'],
+};
+
+const ROWS = {}; const ROW_ORDER = []; const BY_KANA = {};
+// Katakana sits exactly 0x60 above hiragana in Unicode (incl. small ゃゅょ)
+const toKata = str => [...str].map(c => { const n = c.charCodeAt(0); return (n >= 0x3041 && n <= 0x3096) ? String.fromCharCode(n + 0x60) : c; }).join('');
+GROUPS.forEach(g => g.rows.forEach(([id, items]) => {
+  ROWS[id] = {id, group:g.id, items: items.map(([r,k]) => ({r, k, row:id}))};
+  ROWS[id].items.forEach(it => { BY_KANA[it.k] = it; BY_KANA[toKata(it.k)] = it; });
+  ROW_ORDER.push(id);
+}));
+const SCRIPT_NAME = {h:'hiragana', k:'katakana'};
+const scriptsOf = v => v === 'both' ? ['h','k'] : [v];
+const makeItem = (base, sc, key) => ({r:base.r, k: sc === 'k' ? toKata(base.k) : base.k, row:base.row, script:sc, key: key || sc + '-' + base.row});
+const itemsFor = (rowId, sc) => ROWS[rowId].items.map(it => makeItem(it, sc));
+const statKey = it => it.script + ':' + it.k;
+
+// ---------- Settings (remembered in this browser) ----------
+const KEY = 'hiragana-drill-settings-v1';
+const DEFAULTS = {mode:'write', script:'h', order:'row', showRow:true, rows: GROUPS[0].rows.map(r => r[0])};
+function loadSettings(){
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && Array.isArray(s.rows)) {
+      const rows = s.rows.filter(id => ROWS[id]);
+      if (rows.length) return {mode: s.mode === 'read' ? 'read' : 'write', script: ['h','k','both'].includes(s.script) ? s.script : 'h',
+        order: s.order === 'mixed' ? 'mixed' : 'row', showRow: s.showRow !== false, rows};
+    }
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULTS));
+}
+function saveSettings(){ try { localStorage.setItem(KEY, JSON.stringify(settings)); } catch(e) {} }
+let settings = loadSettings();
+
+// ---------- Weak-spot memory ----------
+// Each character gets a score: +2 when peeked or marked "Show again", -1 when answered cleanly (0–10).
+const SKEY = 'kana-drill-stats-v1';
+function loadStats(){ try { const o = JSON.parse(localStorage.getItem(SKEY)); if (o && typeof o === 'object') return o; } catch(e) {} return {}; }
+function saveStats(){ try { localStorage.setItem(SKEY, JSON.stringify(stats)); } catch(e) {} }
+let stats = loadStats();
+const weakList = () => Object.entries(stats).filter(([k,v]) => v > 0 && BY_KANA[k.slice(2)]).sort((a,b) => b[1] - a[1]);
+const weakItems = () => weakList().slice(0, 20).map(([k]) => makeItem(BY_KANA[k.slice(2)], k[0]));
+
+// ---------- Deck ----------
+function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function buildDeck(items, order){
+  if (order === 'mixed') return shuffle(items.slice());
+  const by = new Map();
+  items.forEach(it => { if(!by.has(it.key)) by.set(it.key, []); by.get(it.key).push(it); });
+  return shuffle([...by.values()]).flatMap(g => shuffle(g.slice()));
+}
+const fullItems = () => scriptsOf(settings.script).flatMap(sc => settings.rows.flatMap(id => itemsFor(id, sc)));
+const lookItems = () => scriptsOf(settings.script).flatMap(sc =>
+  LOOKALIKES[sc].flatMap((set, gi) => [...set].map(ch => makeItem(BY_KANA[ch], sc, 'look-' + sc + gi))));
+
+const ROUND_LABEL = {full:'', look:'look-alikes', weak:'weak spots', misses:'misses'};
+const S = {deck:[], idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:'full', source:[], view:'drill'};
+
+function startRound(items, type, forceOrder){
+  S.source = items;
+  S.deck = buildDeck(items, forceOrder || settings.order);
+  Object.assign(S, {idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:type, view:'drill'});
+  disarm(); closeOverlays(); render();
+}
+const startFull = () => startRound(fullItems(), 'full');
+const startLook = () => startRound(lookItems(), 'look', 'row');   // always keep each look-alike set together
+const startWeak = () => { const it = weakItems(); if (it.length) startRound(it, 'weak'); };
+function restart(){
+  if (S.round === 'look') startLook();
+  else if (S.round === 'weak' && weakItems().length) startWeak();
+  else if (S.round === 'misses') startRound(S.source, 'misses');
+  else startFull();
+}
+
+// ---------- Actions ----------
+function scoreCard(i){
+  if (i < 0 || i >= S.deck.length || S.scored.has(i)) return;
+  S.scored.add(i);
+  const k = statKey(S.deck[i]);
+  const miss = S.peeked.has(i) || S.again.has(i);
+  const v = miss ? Math.min(10, (stats[k] || 0) + 2) : Math.max(0, (stats[k] || 0) - 1);
+  if (v) stats[k] = v; else delete stats[k];
+  saveStats();
+}
+function next(){
+  if (S.view !== 'drill') return;
+  if (S.finished) { reveal(); return; }
+  scoreCard(S.idx);
+  if (S.idx < S.deck.length - 1) S.idx++; else S.finished = true;
+  S.peekOn = false; disarm(); render();
+}
+function showAgain(){
+  if (S.view !== 'drill' || S.idx < 0 || S.finished) return;
+  S.again.add(S.idx);
+  const copy = {...S.deck[S.idx], again:true};
+  const earliest = S.idx + 4;                     // at least 3 other cards in between
+  const pos = earliest >= S.deck.length ? S.deck.length
+            : earliest + Math.floor(Math.random() * (Math.min(5, S.deck.length - earliest) + 1));
+  S.deck.splice(pos, 0, copy);
+  next();
+}
+function peek(){
+  if (S.view !== 'drill' || S.idx < 0 || S.finished) return;
+  S.peekOn = !S.peekOn;
+  if (S.peekOn) S.peeked.add(S.idx);
+  render();
+}
+function reveal(){ if (S.idx < 0) return; scoreCard(S.finished ? S.idx : -1); S.view = 'reveal'; S.peekOn = false; disarm(); render(); window.scrollTo(0,0); }
+const canContinue = () => !S.finished && S.idx < S.deck.length - 1;
+function backToRound(){ if (!canContinue()) return; S.view = 'drill'; render(); }
+function missItems(){
+  const seen = new Set(), out = [];
+  [...new Set([...S.peeked, ...S.again])].sort((a,b)=>a-b).forEach(i => {
+    const it = S.deck[i], k = statKey(it);
+    if (!seen.has(k)) { seen.add(k); out.push({...it, again:false}); }
+  });
+  return out;
+}
+function practiceMisses(){ const items = missItems(); if (items.length) startRound(items, 'misses'); }
+function setMode(m){ settings.mode = m; S.peekOn = false; saveSettings(); render(); }
+
+// Two-press confirm helper (Reset mid-round, Clear history)
+let armedId = null, armTimer = null;
+function disarm(){ armedId = null; clearTimeout(armTimer); updateArmed(); }
+function confirmPress(id){
+  if (armedId === id) { disarm(); return true; }
+  armedId = id; clearTimeout(armTimer); armTimer = setTimeout(disarm, 2500); updateArmed(); return false;
+}
+function updateArmed(){
+  const r = $('resetBtn'), c = $('clearWeak');
+  r.classList.toggle('armed', armedId === 'reset');
+  r.innerHTML = armedId === 'reset' ? 'Press again to reset<kbd>R</kbd>' : 'Reset<kbd>R</kbd>';
+  c.textContent = armedId === 'clear' ? 'Click again to clear' : 'Clear history';
+}
+function reset(){
+  const inProgress = S.view === 'drill' && S.idx >= 0 && !S.finished;
+  if (inProgress && !confirmPress('reset')) return;
+  restart();
+}
+
+// ---------- Render ----------
+const $ = id => document.getElementById(id);
+function render(){
+  const total = S.deck.length, shown = S.finished ? total : S.idx + 1;
+  const brand = {h:['あ','Hiragana Drill'], k:['ア','Katakana Drill'], both:['あ','Kana Drill']}[settings.script];
+  $('seal').textContent = brand[0]; $('brandName').textContent = brand[1];
+  const reading = settings.mode === 'read';
+  [...$('modeSeg').children].forEach(b => b.classList.toggle('on', b.dataset.v === settings.mode));
+  $('progress').innerHTML = `${shown} / ${total}` + (ROUND_LABEL[S.round] ? `<span class="badge">${ROUND_LABEL[S.round]}</span>` : '');
+  $('barFill').style.width = total ? (shown/total*100) + '%' : '0';
+
+  const drill = S.view === 'drill';
+  $('drill').classList.toggle('off', !drill);
+  $('reveal').classList.toggle('on', !drill);
+
+  if (drill) {
+    const romaji = $('romaji'), sub = $('sub'), kana = $('kana'), st = $('scripttag');
+    $('peektag').textContent = ''; $('rowtag').textContent = '';
+    st.textContent = ''; st.style.display = 'none';
+    kana.className = 'kana'; kana.textContent = '';
+    if (S.idx < 0) {
+      romaji.className = 'romaji msg';
+      romaji.textContent = {full:'Ready?', look:'Look-alike drill', weak:'Weak spots', misses:'Misses round'}[S.round];
+      const lead = S.round === 'look' ? `${total} easily confused characters, grouped in sets so you compare them. `
+                 : S.round === 'weak' ? `Your ${total} trickiest characters. ` : `${total} characters, shuffled. `;
+      sub.textContent = lead + (reading ? 'Read each one, then peek to check the romaji.' : 'Write the kana for each sound, then peek to check.')
+                      + ' Not sure? Press Show again and it comes back later.';
+    } else if (S.finished) {
+      romaji.className = 'romaji msg'; romaji.textContent = 'Round complete';
+      const needs = missItems().length;
+      sub.textContent = `${total} cards · ${needs} to review. Press Next to reveal all and check your page.`;
+    } else {
+      const it = S.deck[S.idx];
+      romaji.className = 'romaji' + (reading ? ' kanaface' : ''); romaji.textContent = reading ? it.k : it.r;
+      sub.textContent = '';
+      if (settings.showRow && !reading && S.round !== 'look') $('rowtag').textContent = it.row + '-row';
+      $('peektag').textContent = [it.again ? 'again' : '', S.peeked.has(S.idx) ? 'peeked' : ''].filter(Boolean).join(' · ');
+      if (!reading) { st.style.display = ''; st.textContent = SCRIPT_NAME[it.script]; st.className = 'scripttag' + (it.script === 'k' ? ' kata' : ''); }
+      kana.className = 'kana' + (reading ? ' latin' : '') + (S.peekOn ? ' on' : ''); kana.textContent = reading ? it.r : it.k;
+    }
+    const active = S.idx >= 0 && !S.finished;
+    const pb = $('peekBtn');
+    pb.disabled = !active; pb.classList.toggle('peeking', S.peekOn);
+    pb.innerHTML = (S.peekOn ? 'Hide' : 'Peek') + '<kbd>P</kbd>';
+    $('againBtn').disabled = !active;
+    $('nextBtn').innerHTML = (S.finished ? 'Reveal all' : S.idx < 0 ? 'Start' : 'Next') + '<kbd>Space</kbd>';
+    $('revealBtn').disabled = S.idx < 0;
+  } else {
+    const list = S.deck.slice(0, shown);
+    const needs = missItems().length;
+    const mixedScripts = new Set(list.map(it => it.script)).size > 1;
+    $('rTitle').textContent = S.finished ? 'Round complete' : 'So far';
+    $('rMeta').innerHTML = `Shown ${shown} of ${total} · ${needs} to review` + (needs ? ` &nbsp;<span class="legend"></span>= peeked or marked "show again"` : '');
+    $('grid').innerHTML = list.map((it,i) => {
+      const flag = S.peeked.has(i) || S.again.has(i);
+      return `<div class="tile${flag?' peeked':''}"><span class="n">${i+1}</span>`
+        + (mixedScripts ? `<span class="st">${it.script==='k'?'kata':'hira'}</span>` : '')
+        + `<div class="k">${it.k}</div><div class="r">${it.r}</div>`
+        + (it.again ? '<span class="tg">again</span>' : '') + `</div>`;
+    }).join('');
+    $('backBtn').style.display = canContinue() ? '' : 'none';
+    const mb = $('missBtn'); mb.disabled = !needs; mb.textContent = `Practice misses (${needs})`;
+  }
+}
+
+// ---------- Rounds panel ----------
+function openRounds(){ renderRounds(); $('roundsOverlay').classList.add('open'); }
+function renderRounds(){
+  const scr = {h:'hiragana', k:'katakana', both:'hiragana + katakana'}[settings.script];
+  $('rFullHint').textContent = `${fullItems().length} characters from your selected rows (${scr}).`;
+  $('rLookHint').textContent = `${lookItems().length} easily confused ${scr} characters, drilled set by set (e.g. ${settings.script === 'k' ? 'シ/ツ, ソ/ン' : 'ぬ/め, わ/れ/ね'}).`;
+  const wl = weakList();
+  $('rWeak').disabled = !wl.length;
+  $('rWeakHint').textContent = wl.length ? (wl.length === 1 ? 'Your 1 tricky character' : `Your ${Math.min(20, wl.length)} trickiest characters`) + ', based on peeks and "show again" over time.'
+                                         : 'Nothing yet. Characters you peek at or mark "show again" will collect here.';
+  $('weakChips').innerHTML = wl.length ? wl.slice(0, 40).map(([k,v]) => {
+      const base = BY_KANA[k.slice(2)];
+      return `<div class="wchip" title="score ${v}/10"><span class="kh">${k.slice(2)}</span><span class="r">${base.r}</span><span class="dots" style="width:${Math.max(12, v*10)}%"></span></div>`;
+    }).join('') : '<div class="empty">No weak spots recorded yet.</div>';
+  $('clearWeak').style.display = wl.length ? '' : 'none';
+}
+
+// ---------- Settings panel ----------
+let draft = null;
+function openSettings(){ draft = JSON.parse(JSON.stringify(settings)); renderSettings(); $('overlay').classList.add('open'); }
+function closeOverlays(){ document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open')); }
+const anyOverlay = () => !!document.querySelector('.overlay.open');
+function renderSettings(){
+  [...$('scriptSeg').children].forEach(b => b.classList.toggle('on', b.dataset.v === draft.script));
+  [...$('orderSeg').children].forEach(b => b.classList.toggle('on', b.dataset.v === draft.order));
+  [...$('rowSeg').children].forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === draft.showRow));
+  const sel = new Set(draft.rows);
+  $('groups').innerHTML = GROUPS.map(g => `
+    <div class="group">
+      <div class="ghead"><span class="lbl">${g.name}</span>
+        <span><button class="link" data-all="${g.id}">All</button><button class="link" data-none="${g.id}">None</button></span></div>
+      <div class="chips">${g.rows.map(([id, items]) => {
+        const h = items[0][1], label = draft.script === 'k' ? toKata(h) : draft.script === 'both' ? h + '/' + toKata(h) : h;
+        return `<button class="chip${sel.has(id)?' on':''}" data-row="${id}" aria-pressed="${sel.has(id)}"><span class="kh">${label}</span>${id}</button>`;
+      }).join('')}</div>
+    </div>`).join('');
+  const n = draft.rows.reduce((s,id) => s + ROWS[id].items.length, 0) * scriptsOf(draft.script).length;
+  $('selCount').textContent = `${n} character${n===1?'':'s'} selected`;
+  $('applyBtn').disabled = n === 0;
+}
+$('groups').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const set = new Set(draft.rows);
+  if (b.dataset.row) { set.has(b.dataset.row) ? set.delete(b.dataset.row) : set.add(b.dataset.row); }
+  else if (b.dataset.all) GROUPS.find(g=>g.id===b.dataset.all).rows.forEach(r => set.add(r[0]));
+  else if (b.dataset.none) GROUPS.find(g=>g.id===b.dataset.none).rows.forEach(r => set.delete(r[0]));
+  draft.rows = ROW_ORDER.filter(id => set.has(id));
+  renderSettings();
+});
+$('scriptSeg').addEventListener('click', e => { const b=e.target.closest('button'); if(b){ draft.script=b.dataset.v; renderSettings(); } });
+$('orderSeg').addEventListener('click', e => { const b=e.target.closest('button'); if(b){ draft.order=b.dataset.v; renderSettings(); } });
+$('rowSeg').addEventListener('click', e => { const b=e.target.closest('button'); if(b){ draft.showRow=b.dataset.v==='1'; renderSettings(); } });
+$('applyBtn').addEventListener('click', () => { if(!draft.rows.length) return; settings = draft; saveSettings(); startFull(); });
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeOverlays));
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) closeOverlays(); }));
+$('modeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { b.blur(); setMode(b.dataset.v); } });
+
+// ---------- Wiring ----------
+function tap(id, fn){ $(id).addEventListener('click', e => { e.currentTarget.blur(); fn(); }); }
+tap('nextBtn', next); tap('peekBtn', peek); tap('againBtn', showAgain); tap('revealBtn', reveal); tap('resetBtn', reset);
+tap('backBtn', backToRound); tap('missBtn', practiceMisses); tap('newBtn', restart); tap('otherBtn', openRounds);
+tap('settingsBtn', openSettings); tap('roundsBtn', openRounds);
+tap('rFull', startFull); tap('rLook', startLook); tap('rWeak', startWeak);
+tap('clearWeak', () => { if (confirmPress('clear')) { stats = {}; saveStats(); renderRounds(); } });
+
+document.addEventListener('keydown', e => {
+  if (anyOverlay()) { if (e.key === 'Escape') closeOverlays(); return; }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ' || k === 'enter' || k === 'arrowright') { e.preventDefault(); next(); }
+  else if (k === 'p') peek();
+  else if (k === 'a') showAgain();
+  else if (k === 'm') setMode(settings.mode === 'read' ? 'write' : 'read');
+  else if (k === 'e') { if (S.view === 'drill') reveal(); }
+  else if (k === 'r') { S.view === 'reveal' ? restart() : reset(); }
+  else if (k === 'escape') { if (S.view === 'reveal') backToRound(); }
+});
+
+startFull();
+</script>
+</body>
+</html>

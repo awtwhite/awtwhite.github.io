@@ -21,6 +21,11 @@ export default defineConfig({
 					label: 'Reference',
 					autogenerate: { directory: 'reference' },
 				},
+				{
+					label: 'Kana Drill',
+					link: '/kana-drill/',
+					attrs: { target: '_blank' },
+				},
 			],
 		}),
 	],
