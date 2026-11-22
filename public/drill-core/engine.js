@@ -4,6 +4,9 @@
  *
  * Usage: DrillCore.create(config). See public/eigo-drill/index.html for a full example.
  *
+ * view() back may also carry `cls` (extra class on the answer, e.g. 'sm' for smaller text) and `sub`
+ * (a second answer line; only shown if the page has an element with id=answerSub).
+ *
  * config:
  *   id              app id; localStorage keys are `${id}:settings` and `${id}:stats`
  *   defaults        default settings object (needs mode, order; the rest is the app's)
@@ -175,6 +178,8 @@ function create(cfg){
       $('peektag').textContent = ''; $('rowtag').textContent = '';
       badge.textContent = ''; badge.style.display = 'none';
       answer.className = 'answer'; answer.textContent = '';
+      const asub = $('answerSub');             // optional second answer line
+      if (asub) { asub.textContent = ''; asub.className = 'answer-sub'; }
       if (S.idx < 0) {
         romaji.className = 'romaji msg';
         romaji.textContent = {full:'Ready?', look:'Look-alike drill', weak:'Weak spots', misses:'Misses round'}[S.round];
@@ -192,8 +197,9 @@ function create(cfg){
         $('rowtag').textContent = v.rowTag || '';
         $('peektag').textContent = [it.again ? 'again' : '', S.peeked.has(S.idx) ? 'peeked' : ''].filter(Boolean).join(' · ');
         if (v.badge) { badge.style.display = ''; badge.textContent = v.badge.text; badge.className = 'scripttag' + (v.badge.cls ? ' ' + v.badge.cls : ''); }
-        answer.className = 'answer' + (v.back.glyph ? ' glyph' : '') + (S.peekOn ? ' on' : '');
+        answer.className = 'answer' + (v.back.glyph ? ' glyph' : '') + (v.back.cls ? ' ' + v.back.cls : '') + (S.peekOn ? ' on' : '');
         answer.textContent = v.back.text;
+        if (asub) { asub.textContent = v.back.sub || ''; asub.className = 'answer-sub' + (S.peekOn ? ' on' : ''); }
       }
       const active = S.idx >= 0 && !S.finished;
       const pb = $('peekBtn');

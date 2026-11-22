@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanji Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../drill-core/ui.css">
+</head>
+<body>
+<header>
+  <div class="brand"><span class="seal" id="seal">漢</span><span id="brandName">Kanji Drill</span></div>
+  <div class="hright">
+    <div class="seg mini" id="modeSeg"><button data-v="write">Write</button><button data-v="read">Read</button></div>
+    <span class="progress" id="progress">0 / 0</span>
+    <button class="iconbtn" id="roundsBtn">Rounds</button>
+    <button class="iconbtn" id="settingsBtn">Settings</button>
+  </div>
+</header>
+
+<main>
+  <div class="bar"><div id="barFill"></div></div>
+
+  <section class="drill" id="drill">
+    <div class="card" id="card">
+      <div class="rowtag" id="rowtag"></div>
+      <div class="scripttag" id="scripttag"></div>
+      <div class="peektag" id="peektag"></div>
+      <div class="romaji" id="romaji"></div>
+      <div class="sub" id="sub"></div>
+      <div class="answer" id="kana"></div>
+      <div class="answer-sub" id="answerSub"></div>
+    </div>
+    <div class="controls">
+      <button class="big ghost" id="peekBtn">Peek<kbd>P</kbd></button>
+      <button class="big ghost again" id="againBtn">Show again<kbd>A</kbd></button>
+      <button class="big primary" id="nextBtn">Next<kbd>Space</kbd></button>
+    </div>
+    <div class="controls2">
+      <button class="small" id="revealBtn">Reveal all<kbd>E</kbd></button>
+      <button class="small" id="resetBtn">Reset<kbd>R</kbd></button>
+    </div>
+  </section>
+
+  <section class="reveal" id="reveal">
+    <h2 id="rTitle">Your round</h2>
+    <div class="meta" id="rMeta"></div>
+    <div class="grid" id="grid"></div>
+    <div class="rbtns">
+      <button class="small" id="backBtn">Back to round<kbd>Esc</kbd></button>
+      <button class="small" id="missBtn">Practice misses</button>
+      <button class="small" id="newBtn">New round<kbd>R</kbd></button>
+      <button class="small" id="otherBtn">Other rounds…</button>
+    </div>
+  </section>
+</main>
+
+<div class="overlay" id="roundsOverlay">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="rdTitle">
+    <div class="phead"><h2 id="rdTitle">Start a round</h2><button class="link" data-close>Close ✕</button></div>
+    <div class="rounds">
+      <button class="rcard" id="rFull"><b>Full round</b><span id="rFullHint"></span></button>
+      <button class="rcard" id="rLook"><b>Look-alike drill</b><span id="rLookHint"></span></button>
+      <button class="rcard" id="rWeak"><b>Weak spots</b><span id="rWeakHint"></span></button>
+    </div>
+    <div class="weak">
+      <div class="ghead"><span class="lbl">Your weak spots</span><button class="link" id="clearWeak">Clear history</button></div>
+      <div class="wchips" id="weakChips"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <div class="phead"><h2 id="sTitle">Settings</h2><button class="link" data-close>Close ✕</button></div>
+    <div id="settingsBody"></div>
+    <div class="pfoot">
+      <span class="count" id="selCount"></span>
+      <button class="primary" id="applyBtn">Start new round</button>
+    </div>
+  </div>
+</div>
+
+<script src="../drill-core/engine.js"></script>
+<script>
+// ---------- Data: school grade 1 (80 kanji) ----------
+// PROTOTYPE: typed by hand. TODO: verify against KANJIDIC2 and generate grades 2-6 from it.
+// Format per line: kanji | meaning(s) | on'yomi (katakana) | kun'yomi (hiragana)
+const TABLE = `
+一|one|イチ、イツ|ひと(つ)
+二|two|ニ|ふた(つ)
+三|three|サン|み(つ)、みっ(つ)
+四|four|シ|よ(つ)、よん
+五|five|ゴ|いつ(つ)
+六|six|ロク|む(つ)、むっ(つ)
+七|seven|シチ|なな(つ)、なの
+八|eight|ハチ|や(つ)、やっ(つ)
+九|nine|キュウ、ク|ここの(つ)
+十|ten|ジュウ、ジッ|とお
+百|hundred|ヒャク|
+千|thousand|セン|ち
+日|sun, day|ニチ、ジツ|ひ、か
+月|moon, month|ゲツ、ガツ|つき
+火|fire|カ|ひ
+水|water|スイ|みず
+木|tree, wood|ボク、モク|き
+金|gold, money|キン、コン|かね
+土|earth, soil|ド、ト|つち
+年|year|ネン|とし
+夕|evening|セキ|ゆう
+早|early, fast|ソウ|はや(い)
+山|mountain|サン|やま
+川|river|セン|かわ
+森|forest|シン|もり
+林|woods|リン|はやし
+田|rice field|デン|た
+石|stone|セキ、シャク|いし
+空|sky, empty|クウ|そら、あ(く)、から
+雨|rain|ウ|あめ
+花|flower|カ|はな
+草|grass|ソウ|くさ
+竹|bamboo|チク|たけ
+虫|insect|チュウ|むし
+犬|dog|ケン|いぬ
+貝|shellfish|—|かい
+天|heaven, sky|テン|あめ、あま
+人|person|ジン、ニン|ひと
+子|child|シ、ス|こ
+女|woman|ジョ、ニョ|おんな
+男|man|ダン、ナン|おとこ
+口|mouth|コウ、ク|くち
+目|eye|モク|め
+耳|ear|ジ|みみ
+手|hand|シュ|て
+足|foot, leg|ソク|あし、た(りる)
+力|power|リョク、リキ|ちから
+学|study|ガク|まな(ぶ)
+校|school|コウ|—
+先|previous, ahead|セン|さき
+生|life, birth|セイ、ショウ|い(きる)、う(まれる)、なま
+文|writing, sentence|ブン、モン|ふみ
+字|character|ジ|あざ
+名|name|メイ、ミョウ|な
+音|sound|オン、イン|おと、ね
+正|correct|セイ、ショウ|ただ(しい)
+本|book, origin|ホン|もと
+上|above, up|ジョウ、ショウ|うえ、あ(げる)、のぼ(る)
+下|below, down|カ、ゲ|した、さ(げる)、くだ(る)
+中|middle, inside|チュウ|なか
+左|left|サ|ひだり
+右|right|ウ、ユウ|みぎ
+大|big|ダイ、タイ|おお(きい)
+小|small|ショウ|ちい(さい)、こ、お
+白|white|ハク、ビャク|しろ(い)
+赤|red|セキ|あか(い)
+青|blue, green|セイ|あお(い)
+車|car, wheel|シャ|くるま
+円|yen, circle|エン|まる(い)
+玉|ball, jewel|ギョク|たま
+王|king|オウ|—
+糸|thread|シ|いと
+町|town|チョウ|まち
+村|village|ソン|むら
+立|stand|リツ、リュウ|た(つ)
+入|enter|ニュウ|い(る)、はい(る)
+出|exit, go out|シュツ、スイ|で(る)、だ(す)
+休|rest|キュウ|やす(む)
+見|see|ケン|み(る)
+気|spirit, air|キ、ケ|—
+`;
+
+// Rows are the unit for "by row" ordering and the Settings chips: [id, chip label, kanji]
+const GROUPS = [
+  {id:'g1', name:'Grade 1 (80 kanji)', rows:[
+    ['numbers',    'Numbers',           [...'一二三四五六七八九十百千']],
+    ['days',       'Days & time',       [...'日月火水木金土年夕早']],
+    ['nature',     'Nature',            [...'山川森林田石空雨花草竹虫犬貝天']],
+    ['people',     'People & body',     [...'人子女男口目耳手足力']],
+    ['school',     'School & words',    [...'学校先生文字名音正本']],
+    ['directions', 'Directions & size', [...'上下中左右大小']],
+    ['colours',    'Colours',           [...'白赤青']],
+    ['things',     'Things & actions',  [...'車円玉王糸町村立入出休見気']],
+  ]},
+];
+// Easily confused sets within grade 1
+const LOOKALIKES = ['大犬', '人入八', '日目白百', '貝見目', '木本', '林森', '右左', '千十', '王玉', '字学'];
+
+const KANJI = {};
+TABLE.trim().split('\n').forEach(line => {
+  const [k, meaning, on, kun] = line.split('|');
+  KANJI[k] = {id:k, meaning, short: meaning.split(',')[0], on: on === '—' ? '' : on, kun: kun === '—' ? '' : kun};
+});
+
+const ROWS = {}, ROW_ORDER = [];
+GROUPS.forEach(g => g.rows.forEach(([id, label, chars]) => {
+  ROWS[id] = {id, label, group:g.id, chars};
+  ROW_ORDER.push(id);
+  chars.forEach(c => { if (!KANJI[c]) throw new Error('No data for ' + c); KANJI[c].row = id; });
+}));
+const makeItem = (k, key) => ({sid:k.id, id:k.id, row:k.row, key: key || k.row});
+
+// ---------- App ----------
+const ORDERS = [['row','By row'], ['mixed','Fully mixed']];
+const seg = (field, cur, opts) => '<div class="seg">' + opts.map(([v, label]) =>
+  `<button data-set="${field}" data-v="${v}" class="${v === cur ? 'on' : ''}">${label}</button>`).join('') + '</div>';
+
+DrillCore.create({
+  id: 'kanji-drill',
+  modes: ['read'],   // reading only for now; writing (meaning -> kanji) can be added later
+  defaults: {mode:'read', order:'row', rows: ROW_ORDER.slice()},
+  sanitize(s){
+    if (!s || !Array.isArray(s.rows)) return null;
+    const rows = s.rows.filter(id => ROWS[id]);
+    if (!rows.length) return null;
+    return {mode:'read', order: s.order === 'mixed' ? 'mixed' : 'row', rows};
+  },
+  fullItems: s => s.rows.flatMap(id => ROWS[id].chars.map(c => makeItem(KANJI[c]))),
+  lookItems: s => LOOKALIKES.flatMap((set, i) => [...set].map(c => makeItem(KANJI[c], 'look-' + i))),
+  inScope: (it, s) => s.rows.includes(it.row),
+  itemFromSid: sid => KANJI[sid] ? makeItem(KANJI[sid]) : null,
+  brand: () => ['漢', 'Kanji Drill'],
+  prompts: {
+    write: '',
+    read: 'Recall the meaning and a reading for each kanji, then peek to check.',
+  },
+  view(it, reading){
+    const k = KANJI[it.id];
+    const lines = [k.on && 'on   ' + k.on, k.kun && 'kun  ' + k.kun].filter(Boolean).join('\n');
+    return {front:{text:k.id, glyph:true}, back:{text:k.meaning, glyph:false, cls:'sm', sub:lines}};
+  },
+  tile: it => ({main: it.id, sub: KANJI[it.id].short}),
+  fullHint: (s, n) => `${n} kanji from your selected groups.`,
+  lookHint: (s, n) => `${n} easily confused kanji, drilled set by set (e.g. 大/犬, 日/目/白/百).`,
+
+  settingsHTML(d){
+    const sel = new Set(d.rows);
+    return `
+    <div class="opt"><div><div class="lbl">Order</div><div class="hint">By row: finish one shuffled group before the next.</div></div>
+      ${seg('order', d.order, ORDERS)}</div>
+    ${GROUPS.map(g => `
+    <div class="group">
+      <div class="ghead"><span class="lbl">${g.name}</span>
+        <span><button class="link" data-all="${g.id}">All</button><button class="link" data-none="${g.id}">None</button></span></div>
+      <div class="chips">${g.rows.map(([id, label, chars]) =>
+        `<button class="chip${sel.has(id) ? ' on' : ''}" data-row="${id}" aria-pressed="${sel.has(id)}"><span class="kh">${chars[0]}</span>${label}<span style="opacity:.55">${chars.length}</span></button>`).join('')}</div>
+    </div>`).join('')}`;
+  },
+  settingsCount: d => d.rows.reduce((n, id) => n + ROWS[id].chars.length, 0),
+  onSettingsClick(b, d){
+    if (b.dataset.set) { d[b.dataset.set] = b.dataset.v; return; }
+    const set = new Set(d.rows);
+    if (b.dataset.row) set.has(b.dataset.row) ? set.delete(b.dataset.row) : set.add(b.dataset.row);
+    else if (b.dataset.all) GROUPS.find(g => g.id === b.dataset.all).rows.forEach(r => set.add(r[0]));
+    else if (b.dataset.none) GROUPS.find(g => g.id === b.dataset.none).rows.forEach(r => set.delete(r[0]));
+    d.rows = ROW_ORDER.filter(id => set.has(id));
+  },
+});
+</script>
+</body>
+</html>

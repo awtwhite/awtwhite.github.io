@@ -31,6 +31,10 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
 .answer{font-family:Nunito,system-ui,sans-serif;font-weight:800;font-size:clamp(3rem,11vw,6.5rem);line-height:1.15;color:var(--accent);min-height:1.2em;margin-top:8px;visibility:hidden;text-align:center}
 .answer.glyph{font-family:var(--face);font-weight:var(--face-w);font-size:clamp(4rem,15vw,8.5rem)}
 .answer.on{visibility:visible}
+.answer.sm{font-size:clamp(2rem,8vw,3.6rem)}
+/* optional second answer line (an app opts in by adding <div class="answer-sub" id="answerSub"> after #kana) */
+.answer-sub{color:var(--accent);font-weight:700;font-size:clamp(1rem,3.4vw,1.4rem);line-height:1.6;white-space:pre-line;text-align:center;min-height:3.2em;margin-top:6px;visibility:hidden}
+.answer-sub.on{visibility:visible}
 .seg.mini button{padding:7px 12px;font-size:15px}
 .controls{display:grid;grid-template-columns:1fr 1fr 1.6fr;gap:12px;width:min(720px,100%)}
 .controls2{display:flex;gap:12px;width:min(720px,100%)}

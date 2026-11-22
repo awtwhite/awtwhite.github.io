@@ -27,7 +27,7 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 | Drill | Content | Notes |
 |---|---|---|
 | **English letters & numbers** | A–Z (upper/lower), 0–9, maybe punctuation | **Built as Eigo Drill** (`public/eigo-drill/`). Write mode shows the letter name ("bee"); Read mode shows the character. Ideas for more: phonics sound prompts (/b/), "capital → write lowercase" mode, punctuation, separate upper/lower cards, sight words. |
-| **Kanji (grade 1 start)** | Meaning/reading ↔ character | Needs a data source and a decision on which readings to include. |
+| **Kanji Drill** | Kanji → meaning + on/kun readings. Jōyō set (2,136): grade 1 (80), grade 2 (160), then up to grade 6 (1,026 total) | **Prototype started** (`public/kanji-drill/`, grade 1 only, hand-entered data). Separate app on `drill-core`. See "Kanji Drill" under TODOs. Top ~1,000 kanji cover about 90% of everyday text. |
 | **Korean Hangul** | Consonants, vowels, then syllable blocks | Same shape as kana: rows = consonant groups. |
 | **Cyrillic / Greek / Arabic / Hebrew alphabets** | Letters with transliteration | Mostly just new data once the core is shared. |
 | **Numbers in other languages** | 1–100 | Later. |
@@ -49,6 +49,16 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 - [ ] Rename "look-alikes" to "confusable sets" in the core UI text if it reads oddly for non-kana apps.
 - [x] Build `public/eigo-drill/` on the same core as the proof that the split works.
 - [ ] Revisit: move to Astro pages + TypeScript in `src/lib/` if we want tests or more than 3–4 apps.
+
+### Kanji Drill
+- [x] Grade 1 prototype: 80 kanji in 8 themed rows (numbers, days & time, nature, people & body, school & words, directions & size, colours, things & actions). Peek shows meaning plus on/kun readings.
+- [ ] Check the hand-entered grade 1 data against KANJIDIC2 (grade, meanings, readings). KANJIDIC2 is CC BY-SA, so add an attribution line to the app.
+- [ ] Grades 2–6 (generate the data file from KANJIDIC2 rather than typing it).
+- [ ] Settings: choose what Peek shows (meaning / readings / both); group by grade or by theme.
+- [ ] Reading practice: type or choose the reading; meaning ↔ kanji multiple choice.
+- [ ] Look-alike sets beyond grade 1 (e.g. 未/末, 土/士, 待/持).
+- [ ] Example words per kanji (e.g. 日本, 火曜日) and stroke-order hints.
+- [ ] JLPT level filter (N5–N1) as an alternative to school grades.
 
 ### Eigo Drill
 - [ ] Number groups are 1–9, 10–90 and 100–900 (no zero). Later: zero, teens (11–19), 1000+, mixed numbers like 47 and 305.
