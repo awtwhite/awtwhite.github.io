@@ -48,6 +48,7 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 - [ ] Migrate Kana Drill onto the core (after the UI tweaks). Kana needs: script badge (`badge.cls: 'inv'` for katakana), row tag via `view().rowTag`, `variant` for the hira/kata tag in Reveal, `--face: 'Klee One'`. Kana's inline CSS currently carries a copy of the colour themes, radii and gaps from `ui.css`; delete it when migrating. Migrate the old `hiragana-drill-settings-v1` / `kana-drill-stats-v1` keys.
 - [ ] Rename "look-alikes" to "confusable sets" in the core UI text if it reads oddly for non-kana apps.
 - [x] Build `public/eigo-drill/` on the same core as the proof that the split works.
+- [x] App switcher: tapping the logo/name in the header opens a menu of all drill apps (`public/drill-core/switcher.js`). **Adding a new app: add it to `APPS` in that file**, and give it a `data-theme` colour.
 - [ ] Revisit: move to Astro pages + TypeScript in `src/lib/` if we want tests or more than 3–4 apps.
 
 ### Kanji Drill
