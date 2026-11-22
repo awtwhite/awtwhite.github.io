@@ -31,6 +31,11 @@ export default defineConfig({
 					link: '/eigo-drill/',
 					attrs: { target: '_blank' },
 				},
+				{
+					label: 'Kanji Drill',
+					link: '/kanji-drill/',
+					attrs: { target: '_blank' },
+				},
 			],
 		}),
 	],
