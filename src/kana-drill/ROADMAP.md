@@ -45,7 +45,7 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] Create `public/drill-core/engine.js` and `ui.css` (built with Eigo Drill).
 - [x] Classic `<script>` tags, not ES modules, so the apps still open from `file://`.
 - [x] Generic item shape `{sid, key, ...}`; stats keyed per app (`eigo-drill:stats`).
-- [ ] Migrate Kana Drill onto the core (after the UI tweaks). Kana needs: script badge (`badge.cls: 'inv'` for katakana), row tag via `view().rowTag`, `variant` for the hira/kata tag in Reveal, `--face: 'Klee One'`. Migrate the old `hiragana-drill-settings-v1` / `kana-drill-stats-v1` keys.
+- [ ] Migrate Kana Drill onto the core (after the UI tweaks). Kana needs: script badge (`badge.cls: 'inv'` for katakana), row tag via `view().rowTag`, `variant` for the hira/kata tag in Reveal, `--face: 'Klee One'`. Kana's inline CSS currently carries a copy of the colour themes, radii and gaps from `ui.css`; delete it when migrating. Migrate the old `hiragana-drill-settings-v1` / `kana-drill-stats-v1` keys.
 - [ ] Rename "look-alikes" to "confusable sets" in the core UI text if it reads oddly for non-kana apps.
 - [x] Build `public/eigo-drill/` on the same core as the proof that the split works.
 - [ ] Revisit: move to Astro pages + TypeScript in `src/lib/` if we want tests or more than 3–4 apps.
