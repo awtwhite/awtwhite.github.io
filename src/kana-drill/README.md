@@ -129,11 +129,4 @@ All the code is in the `<script>` at the bottom of `kana-drill.html`.
 
 ## Ideas for the future
 
-These were discussed but not built yet:
-
-1. **Type-the-answer reading.** In Read mode, type the romaji and the app checks it instantly, which gives a real score instead of relying on Peek. It needs to accept alternative spellings (e.g. *si* for し, *tu* for つ, *o* for を).
-2. **Draw on screen.** A writing pad on the card for tablets and phones, so you can practise without paper. You'd check your drawing with Peek, and could clear the pad automatically on Next.
-3. **Timed rounds.** Show the total time for the round and the average time per card, and keep a best time for each kind of round.
-4. **Extended katakana.** The sounds used for foreign words: ファ フィ フェ フォ, ティ ディ, ヴ, ウィ ウェ ウォ, シェ ジェ チェ, and so on. This would be a fourth group in Settings (katakana only).
-5. **Pronunciation audio.** A speaker button that says the sound aloud using the browser's Japanese voice. This was left out on purpose for now.
-6. **Sync between devices.** Weak-spot history currently lives in one browser. Export/import (copy a code) or a small backend would let you share it between your phone and computer.
+Future features, extra languages and TODOs are tracked in [ROADMAP.md](ROADMAP.md).
