@@ -26,6 +26,8 @@
  *   applySettings(s)  optional; called on every render (e.g. to set CSS variables)
  *   sorters         optional {orderName: compareFn}; extra Order settings that sort the deck instead of
  *                   shuffling it (e.g. az, za). Look-alike rounds always stay grouped by set.
+ *   settings.timer  optional boolean (default on): time each card in Read mode. Apps put the toggle in
+ *                   their settings panel and keep `timer` through sanitize().
  *   modes           optional; which of ['write','read'] the app offers (default both). With one
  *                   mode the Write/Read toggle is hidden and the M shortcut does nothing.
  *
@@ -73,13 +75,15 @@ function create(cfg){
   const ROUND_LABEL = {full:'', look:'look-alikes', weak:'weak spots', misses:'misses'};
   const S = {deck:[], idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:'full', source:[], view:'drill',
              againCount:new Map(),   // card sid -> times "Show again" was pressed this round
-             sessionAgain:{}};       // same, running total for the whole page session (never reset, not saved)
+             sessionAgain:{},       // same, running total for the whole page session (never reset, not saved)
+             times:{}, cardMs:0, clockStart:null,   // read-mode timing: ms per shown card (by deck index), time on the current card, clock start
+             sessionTimes:{}};       // card sid -> every time (ms) recorded this page session, not saved
 
   function startRound(items, type, forceOrder){
     S.source = items;
     const order = forceOrder || settings.order, sorter = cfg.sorters && cfg.sorters[order];
     S.deck = sorter ? items.slice().sort(sorter) : buildDeck(items, order);
-    Object.assign(S, {idx:-1, finished:false, peeked:new Set(), again:new Set(), againCount:new Map(), scored:new Set(), peekOn:false, round:type, view:'drill'});
+    Object.assign(S, {idx:-1, finished:false, peeked:new Set(), again:new Set(), againCount:new Map(), times:{}, cardMs:0, clockStart:null, scored:new Set(), peekOn:false, round:type, view:'drill'});
     disarm(); closeOverlays(); render();
   }
   const startFull = () => startRound(fullItems(), 'full');
@@ -102,11 +106,33 @@ function create(cfg){
     if (v) stats[k] = v; else delete stats[k];
     saveStats();
   }
+  const timeBand = ms => ms < 1000 ? 'good' : ms <= 3000 ? 'ok' : ms <= 5000 ? 'slow' : 'veryslow';
+  const fmtSecs = ms => (ms / 1000).toFixed(1) + 's';
+  const timeLegend = '<div class="tlegend">Time on each card (read mode): <span class="tm-good">under 1s</span> proficient · <span class="tm-ok">1–3s</span> ok · <span class="tm-slow">3–5s</span> needs improvement · <span class="tm-veryslow">over 5s</span> really needs improvement</div>';
+  // Read-mode timing: the clock runs only while a card is on screen in Read mode, and pauses for
+  // panels, Reveal all and hidden tabs. A card's time is recorded when you move on (Next or Show again).
+  const clockOn = () => S.view === 'drill' && S.idx >= 0 && !S.finished && settings.mode === 'read' && settings.timer !== false && !anyOverlay() && !document.hidden;
+  function syncClock(){
+    const run = clockOn(), now = performance.now();
+    if (run && S.clockStart == null) S.clockStart = now;
+    else if (!run && S.clockStart != null) { S.cardMs += now - S.clockStart; S.clockStart = null; }
+  }
+  function finishCard(){
+    if (S.idx < 0 || S.finished) return;
+    if (S.clockStart != null) { S.cardMs += performance.now() - S.clockStart; S.clockStart = null; }
+    if (settings.mode === 'read' && settings.timer !== false && S.cardMs > 0) {
+      S.times[S.idx] = S.cardMs;
+      const sid = S.deck[S.idx].sid;
+      (S.sessionTimes[sid] = S.sessionTimes[sid] || []).push(S.cardMs);
+    }
+  }
   function next(){
     if (S.view !== 'drill') return;
     if (S.finished) { reveal(); return; }
+    finishCard();
     scoreCard(S.idx);
     if (S.idx < S.deck.length - 1) S.idx++; else S.finished = true;
+    S.cardMs = 0; S.clockStart = null;
     S.peekOn = false; disarm(); render();
   }
   function showAgain(){
@@ -142,7 +168,7 @@ function create(cfg){
   }
   function practiceMisses(){ const items = missItems(); if (items.length) startRound(items, 'misses'); }
   const modes = cfg.modes || ['write', 'read'];
-  function setMode(m){ if (!modes.includes(m)) return; settings.mode = m; S.peekOn = false; saveSettings(); render(); }
+  function setMode(m){ if (!modes.includes(m)) return; settings.mode = m; S.peekOn = false; S.cardMs = 0; S.clockStart = null; saveSettings(); render(); }
 
   // Two-press confirm helper (Reset mid-round, Clear history)
   let armedId = null, armTimer = null;
@@ -165,6 +191,7 @@ function create(cfg){
 
   // ---------- Render ----------
   function render(){
+    syncClock();
     if (cfg.applySettings) cfg.applySettings(settings);
     const total = S.deck.length, shown = S.finished ? total : S.idx + 1;
     const brand = cfg.brand(settings);
@@ -219,13 +246,14 @@ function create(cfg){
       const needs = missItems().length;
       const mixed = new Set(list.map(it => it.variant)).size > 1;
       $('rTitle').textContent = S.finished ? 'Round complete' : 'So far';
-      $('rMeta').innerHTML = `Shown ${shown} of ${total} · ${needs} to review` + (needs ? ` &nbsp;<span class="legend"></span>= peeked or marked "show again"` : '');
+      $('rMeta').innerHTML = `Shown ${shown} of ${total} · ${needs} to review` + (needs ? ` &nbsp;<span class="legend"></span>= peeked or marked "show again"` : '') + (Object.keys(S.times).length ? timeLegend : '');
       $('grid').innerHTML = list.map((it, i) => {
         const flag = S.peeked.has(i) || S.again.has(i), t = cfg.tile(it, mixed, settings);
-        return `<div class="tile${flag ? ' peeked' : ''}"><span class="n">${i + 1}</span>`
+        return `<div class="tile${flag ? ' peeked' : ''}${S.times[i] != null ? ' timed' : ''}"><span class="n">${i + 1}</span>`
           + (t.tag ? `<span class="st">${t.tag}</span>` : '')
           + `<div class="k">${t.main}</div><div class="r">${t.sub}</div>`
-          + (it.again ? `<span class="tg">${againLabel(it.sid)}</span>` : '') + `</div>`;
+          + (it.again ? `<span class="tg">${againLabel(it.sid)}</span>` : '')
+          + (S.times[i] != null ? `<span class="tm ${timeBand(S.times[i])}">${fmtSecs(S.times[i])}</span>` : '') + `</div>`;
       }).join('');
       $('backBtn').style.display = canContinue() ? '' : 'none';
       const mb = $('missBtn'); mb.disabled = !needs; mb.textContent = `Practice misses (${needs})`;
@@ -233,7 +261,7 @@ function create(cfg){
   }
 
   // ---------- Rounds panel ----------
-  function openRounds(){ renderRounds(); $('roundsOverlay').classList.add('open'); }
+  function openRounds(){ renderRounds(); $('roundsOverlay').classList.add('open'); syncClock(); }
   function renderRounds(){
     $('rFullHint').textContent = cfg.fullHint(settings, fullItems().length);
     const nLook = lookItems().length;
@@ -252,8 +280,8 @@ function create(cfg){
 
   // ---------- Settings panel (the controls themselves come from the app) ----------
   let draft = null;
-  function openSettings(){ draft = clone(settings); renderSettings(); $('overlay').classList.add('open'); }
-  function closeOverlays(){ document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open')); }
+  function openSettings(){ draft = clone(settings); renderSettings(); $('overlay').classList.add('open'); syncClock(); }
+  function closeOverlays(){ document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open')); syncClock(); }
   const anyOverlay = () => !!document.querySelector('.overlay.open');
   function renderSettings(){
     $('settingsBody').innerHTML = cfg.settingsHTML(draft);
@@ -279,6 +307,7 @@ function create(cfg){
   tap('rFull', startFull); tap('rLook', startLook); tap('rWeak', startWeak);
   tap('clearWeak', () => { if (confirmPress('clear')) { stats = {}; saveStats(); renderRounds(); } });
 
+  document.addEventListener('visibilitychange', syncClock);
   document.addEventListener('keydown', e => {
     if (anyOverlay()) { if (e.key === 'Escape') closeOverlays(); return; }
     if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -296,5 +325,8 @@ function create(cfg){
   return {state:S, startFull, startLook, startWeak};
 }
 
-global.DrillCore = {create, shuffle, buildDeck};
+// Heading for a group of settings (see .sect in ui.css)
+const section = title => '<h3 class="sect">' + title + '</h3>';
+
+global.DrillCore = {create, shuffle, buildDeck, section};
 })(window);

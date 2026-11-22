@@ -29,7 +29,7 @@ header{display:flex;flex-direction:column;gap:10px;padding:14px 20px}
 .seal{width:32px;height:32px;border-radius:3.5px;background:var(--accent);color:var(--accent-ink,#fff);display:grid;place-items:center;font-family:'Klee One',serif;font-weight:600;font-size:20px}
 .progress{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:800;margin-left:auto}
 .badge{font-size:12px;font-weight:800;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:2px 8px;margin-left:6px}
-.iconbtn{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:5px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
+.iconbtn{background:rgba(0,0,0,.12);border:1px solid var(--line);color:var(--ink);border-radius:5px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
 .iconbtn.sq{display:grid;place-items:center;padding:8px 10px}
 main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:6px 20px 28px;gap:18px}
 .bar{width:min(720px,100%);height:6px;background:var(--line);border-radius:99px;overflow:hidden}
@@ -83,33 +83,55 @@ kbd{font-family:inherit;font-size:.68em;font-weight:800;opacity:.55;margin-left:
 .panel{background:var(--card);color:var(--ink);border-radius:10px;width:min(660px,100%);padding:22px 22px 18px}
 .panel{max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px);overflow:auto}
 /* Settings: header and footer stay put, only the options scroll between them */
-.panel.fixedfoot{display:flex;flex-direction:column;overflow:hidden}
-.fixedfoot .pbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-.fixedfoot .pbody.fade-bottom{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent)}
-.fixedfoot .pfoot{flex:none;margin-top:0;padding-top:14px;border-top:1px solid var(--line)}
+.panel.fixedfoot{display:flex;flex-direction:column;overflow:hidden;padding-left:0;padding-right:0}
+.fixedfoot .phead{padding:0 22px}
+.fixedfoot .pbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 22px}
+.fixedfoot .pbody>:last-child{border-bottom:0}
+.fixedfoot .pbody.fade-top,.fixedfoot .pbody.fade-bottom{-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,var(--ta,1)) 0,#000 var(--ft,0px),#000 calc(100% - var(--fb,0px)),rgba(0,0,0,var(--ba,1)) 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,var(--ta,1)) 0,#000 var(--ft,0px),#000 calc(100% - var(--fb,0px)),rgba(0,0,0,var(--ba,1)) 100%)}
+.fixedfoot .pbody.fade-top{--ta:0;--ft:36px}
+.fixedfoot .pbody.fade-bottom{--ba:0;--fb:36px}
+/* The last group ends with a thick rule inside the scrolling area (not on the footer).
+   No extra margin: it sits 14px under the last block (its own padding) and 14px above the footer content (footer padding). */
+.fixedfoot .pbody::after{content:'';display:block;height:6px;margin:0 -22px;background:var(--line)}
+.fixedfoot .pfoot{flex:none;margin-top:0;padding:14px 22px 0}
 .phead{display:flex;justify-content:space-between;align-items:center}
 .phead h2{margin:0;font-size:22px}
 .opt{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .opt .lbl{font-weight:800}
 .opt .hint{color:var(--muted);font-size:14px;font-weight:600}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.seg button{border:none;background:none;padding:9px 14px;font:inherit;font-weight:700;color:var(--ink);cursor:pointer}
+.seg button{border:none;background:rgba(0,0,0,.12);padding:9px 14px;font:inherit;font-weight:700;color:var(--ink);cursor:pointer}
 .seg button.on{background:var(--btn);color:var(--btn-ink)}
 .group{padding:14px 0;border-bottom:1px solid var(--line)}
 .ghead{display:flex;justify-content:space-between;align-items:center}
 .ghead .lbl{font-weight:800}
 .link{background:none;border:none;color:var(--accent);font:inherit;font-weight:800;cursor:pointer;padding:4px 6px}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
-.chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:99px;padding:7px 12px;cursor:pointer;font:inherit;font-weight:700;display:inline-flex;gap:7px;align-items:center}
+.chip{border:1px solid var(--line);background:rgba(0,0,0,.12);color:var(--ink);border-radius:99px;padding:7px 12px;cursor:pointer;font:inherit;font-weight:700;display:inline-flex;gap:7px;align-items:center}
 .chip .kh{font-family:'Klee One',serif;font-weight:600;font-size:17px}
 .chip.on{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
 .pfoot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
 .pfoot .count{color:var(--muted);font-weight:700}
+/* Settings group heading: 6px light rule (the theme's divider colour) across the full dialog width, 30px of space above and below it (except the first, which sits 14px under the title row).
+   The block before it is 14px padded, so 16px of margin makes 30px; its thin divider is dropped. */
+.sect{margin:16px -22px 0;padding:30px 22px 2px;border-top:6px solid var(--line);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pbody>.sect:first-child{margin-top:14px}
+.opt:has(+ .sect),.group:has(+ .sect),#groups:has(+ .sect) .group:last-child{border-bottom:0}
 .pfoot .primary{font:inherit;font-weight:800;font-size:17px;padding:13px 20px;border-radius:6px;border:2px solid var(--btn);cursor:pointer}
 .controls{grid-template-columns:1fr 1fr 1.6fr}
 @media (max-width:480px){button.big{height:84px;padding-top:8px;padding-bottom:8px}}
 .again{background:transparent;color:var(--ink);border-color:var(--line)!important}
 .tile .tg{position:absolute;bottom:4px;right:8px;font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase}
+:root{--t-good:#2e7d32;--t-slow:#b26a00;--t-veryslow:#c62828}
+@media (prefers-color-scheme:dark){:root{--t-good:#66bb6a;--t-slow:#f0a73a;--t-veryslow:#ff7a70}}
+.tile.timed{padding-bottom:26px}
+.tile .tm{position:absolute;bottom:4px;left:8px;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+.tm.good,.tm-good{color:var(--t-good)}
+.tm.ok,.tm-ok{color:var(--muted)}
+.tm.slow,.tm-slow{color:var(--t-slow)}
+.tm.veryslow,.tm-veryslow{color:var(--t-veryslow)}
+.tlegend{margin-top:6px;font-size:13px}
+.tlegend span{font-weight:800}
 .rounds{display:grid;gap:6px;margin-top:16px}
 .rcard{text-align:left;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:14px 16px;cursor:pointer}
 .rcard:hover:not(:disabled){border-color:var(--ink)}
@@ -194,19 +216,26 @@ kbd{font-family:inherit;font-size:.68em;font-weight:800;opacity:.55;margin-left:
   <div class="panel fixedfoot" role="dialog" aria-modal="true" aria-labelledby="sTitle">
     <div class="phead"><h2 id="sTitle">Settings</h2><button class="link" data-close>Close ✕</button></div>
     <div class="pbody">
+    <h3 class="sect">What to practise</h3>
     <div class="opt">
       <div><div class="lbl">Script</div><div class="hint">Both: each sound appears once as hiragana and once as katakana.</div></div>
       <div class="seg" id="scriptSeg"><button data-v="h">Hiragana</button><button data-v="k">Katakana</button><button data-v="both">Both</button></div>
     </div>
+    <div id="groups"></div>
+    <h3 class="sect">How the card looks</h3>
+    <div class="opt">
+      <div><div class="lbl">Show row name</div><div class="hint">Writing mode only. Shows e.g. "da-row" so ji/zu (ぢ/づ vs じ/ず) are clear.</div></div>
+      <div class="seg" id="rowSeg"><button data-v="1">On</button><button data-v="0">Off</button></div>
+    </div>
+    <h3 class="sect">How the round runs</h3>
     <div class="opt">
       <div><div class="lbl">Order</div><div class="hint">By row: finish one shuffled row before the next.</div></div>
       <div class="seg" id="orderSeg"><button data-v="row">By row</button><button data-v="mixed">Fully mixed</button></div>
     </div>
     <div class="opt">
-      <div><div class="lbl">Show row name</div><div class="hint">Writing mode only. Shows e.g. "da-row" so ji/zu (ぢ/づ vs じ/ず) are clear.</div></div>
-      <div class="seg" id="rowSeg"><button data-v="1">On</button><button data-v="0">Off</button></div>
+      <div><div class="lbl">Timer</div><div class="hint">Read mode only. Times each card until you move on and shows it in Reveal all.</div></div>
+      <div class="seg" id="timerSeg"><button data-v="1">On</button><button data-v="0">Off</button></div>
     </div>
-    <div id="groups"></div>
     </div>
     <div class="pfoot">
       <span class="count" id="selCount"></span>
@@ -273,14 +302,14 @@ const statKey = it => it.script + ':' + it.k;
 
 // ---------- Settings (remembered in this browser) ----------
 const KEY = 'hiragana-drill-settings-v1';
-const DEFAULTS = {mode:'write', script:'h', order:'row', showRow:true, rows: GROUPS[0].rows.map(r => r[0])};
+const DEFAULTS = {mode:'write', script:'h', order:'row', showRow:true, timer:true, rows: GROUPS[0].rows.map(r => r[0])};
 function loadSettings(){
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
     if (s && Array.isArray(s.rows)) {
       const rows = s.rows.filter(id => ROWS[id]);
       if (rows.length) return {mode: s.mode === 'read' ? 'read' : 'write', script: ['h','k','both'].includes(s.script) ? s.script : 'h',
-        order: s.order === 'mixed' ? 'mixed' : 'row', showRow: s.showRow !== false, rows};
+        order: s.order === 'mixed' ? 'mixed' : 'row', showRow: s.showRow !== false, timer: s.timer !== false, rows};
     }
   } catch(e) {}
   return JSON.parse(JSON.stringify(DEFAULTS));
@@ -312,12 +341,14 @@ const lookItems = () => scriptsOf(settings.script).flatMap(sc =>
 const ROUND_LABEL = {full:'', look:'look-alikes', weak:'weak spots', misses:'misses'};
 const S = {deck:[], idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:'full', source:[], view:'drill',
            againCount:new Map(),   // statKey -> times "Show again" was pressed this round
-           sessionAgain:{}};       // same, running total for the whole page session (never reset, not saved)
+           sessionAgain:{},       // same, running total for the whole page session (never reset, not saved)
+             times:{}, cardMs:0, clockStart:null,   // read-mode timing: ms per shown card (by deck index), time on the current card, clock start
+             sessionTimes:{}};       // statKey -> every time (ms) recorded this page session, not saved
 
 function startRound(items, type, forceOrder){
   S.source = items;
   S.deck = buildDeck(items, forceOrder || settings.order);
-  Object.assign(S, {idx:-1, finished:false, peeked:new Set(), again:new Set(), againCount:new Map(), scored:new Set(), peekOn:false, round:type, view:'drill'});
+  Object.assign(S, {idx:-1, finished:false, peeked:new Set(), again:new Set(), againCount:new Map(), times:{}, cardMs:0, clockStart:null, scored:new Set(), peekOn:false, round:type, view:'drill'});
   disarm(); closeOverlays(); render();
 }
 const startFull = () => startRound(fullItems(), 'full');
@@ -340,11 +371,33 @@ function scoreCard(i){
   if (v) stats[k] = v; else delete stats[k];
   saveStats();
 }
+const timeBand = ms => ms < 1000 ? 'good' : ms <= 3000 ? 'ok' : ms <= 5000 ? 'slow' : 'veryslow';
+const fmtSecs = ms => (ms / 1000).toFixed(1) + 's';
+const timeLegend = '<div class="tlegend">Time on each card (read mode): <span class="tm-good">under 1s</span> proficient · <span class="tm-ok">1–3s</span> ok · <span class="tm-slow">3–5s</span> needs improvement · <span class="tm-veryslow">over 5s</span> really needs improvement</div>';
+// Read-mode timing: the clock runs only while a card is on screen in Read mode, and pauses for
+// panels, Reveal all and hidden tabs. A card's time is recorded when you move on (Next or Show again).
+const clockOn = () => S.view === 'drill' && S.idx >= 0 && !S.finished && settings.mode === 'read' && settings.timer !== false && !anyOverlay() && !document.hidden;
+function syncClock(){
+  const run = clockOn(), now = performance.now();
+  if (run && S.clockStart == null) S.clockStart = now;
+  else if (!run && S.clockStart != null) { S.cardMs += now - S.clockStart; S.clockStart = null; }
+}
+function finishCard(){
+  if (S.idx < 0 || S.finished) return;
+  if (S.clockStart != null) { S.cardMs += performance.now() - S.clockStart; S.clockStart = null; }
+  if (settings.mode === 'read' && settings.timer !== false && S.cardMs > 0) {
+    S.times[S.idx] = S.cardMs;
+    const sid = statKey(S.deck[S.idx]);
+    (S.sessionTimes[sid] = S.sessionTimes[sid] || []).push(S.cardMs);
+  }
+}
 function next(){
   if (S.view !== 'drill') return;
   if (S.finished) { reveal(); return; }
+  finishCard();
   scoreCard(S.idx);
   if (S.idx < S.deck.length - 1) S.idx++; else S.finished = true;
+  S.cardMs = 0; S.clockStart = null;
   S.peekOn = false; disarm(); render();
 }
 function showAgain(){
@@ -379,7 +432,7 @@ function missItems(){
   return out;
 }
 function practiceMisses(){ const items = missItems(); if (items.length) startRound(items, 'misses'); }
-function setMode(m){ settings.mode = m; S.peekOn = false; saveSettings(); render(); }
+function setMode(m){ settings.mode = m; S.peekOn = false; S.cardMs = 0; S.clockStart = null; saveSettings(); render(); }
 
 // Two-press confirm helper (Reset mid-round, Clear history)
 let armedId = null, armTimer = null;
@@ -403,6 +456,7 @@ function reset(){
 // ---------- Render ----------
 const $ = id => document.getElementById(id);
 function render(){
+  syncClock();
   const total = S.deck.length, shown = S.finished ? total : S.idx + 1;
   const brand = {h:['あ','Hiragana Drill'], k:['ア','Katakana Drill'], both:['あ','Kana Drill']}[settings.script];
   $('seal').textContent = brand[0]; $('brandName').textContent = brand[1];
@@ -452,13 +506,14 @@ function render(){
     const needs = missItems().length;
     const mixedScripts = new Set(list.map(it => it.script)).size > 1;
     $('rTitle').textContent = S.finished ? 'Round complete' : 'So far';
-    $('rMeta').innerHTML = `Shown ${shown} of ${total} · ${needs} to review` + (needs ? ` &nbsp;<span class="legend"></span>= peeked or marked "show again"` : '');
+    $('rMeta').innerHTML = `Shown ${shown} of ${total} · ${needs} to review` + (needs ? ` &nbsp;<span class="legend"></span>= peeked or marked "show again"` : '') + (Object.keys(S.times).length ? timeLegend : '');
     $('grid').innerHTML = list.map((it,i) => {
       const flag = S.peeked.has(i) || S.again.has(i);
-      return `<div class="tile${flag?' peeked':''}"><span class="n">${i+1}</span>`
+      return `<div class="tile${flag?' peeked':''}${S.times[i] != null ? ' timed' : ''}"><span class="n">${i+1}</span>`
         + (mixedScripts ? `<span class="st">${it.script==='k'?'kata':'hira'}</span>` : '')
         + `<div class="k">${it.k}</div><div class="r">${it.r}</div>`
-        + (it.again ? `<span class="tg">${againLabel(it)}</span>` : '') + `</div>`;
+        + (it.again ? `<span class="tg">${againLabel(it)}</span>` : '')
+        + (S.times[i] != null ? `<span class="tm ${timeBand(S.times[i])}">${fmtSecs(S.times[i])}</span>` : '') + `</div>`;
     }).join('');
     $('backBtn').style.display = canContinue() ? '' : 'none';
     const mb = $('missBtn'); mb.disabled = !needs; mb.textContent = `Practice misses (${needs})`;
@@ -466,7 +521,7 @@ function render(){
 }
 
 // ---------- Rounds panel ----------
-function openRounds(){ renderRounds(); $('roundsOverlay').classList.add('open'); }
+function openRounds(){ renderRounds(); $('roundsOverlay').classList.add('open'); syncClock(); }
 function renderRounds(){
   const scr = {h:'hiragana', k:'katakana', both:'hiragana + katakana'}[settings.script];
   $('rFullHint').textContent = `${fullItems().length} characters from your selected rows (${scr}).`;
@@ -484,13 +539,14 @@ function renderRounds(){
 
 // ---------- Settings panel ----------
 let draft = null;
-function openSettings(){ draft = JSON.parse(JSON.stringify(settings)); renderSettings(); $('overlay').classList.add('open'); }
-function closeOverlays(){ document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open')); }
+function openSettings(){ draft = JSON.parse(JSON.stringify(settings)); renderSettings(); $('overlay').classList.add('open'); syncClock(); }
+function closeOverlays(){ document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open')); syncClock(); }
 const anyOverlay = () => !!document.querySelector('.overlay.open');
 function renderSettings(){
   [...$('scriptSeg').children].forEach(b => b.classList.toggle('on', b.dataset.v === draft.script));
   [...$('orderSeg').children].forEach(b => b.classList.toggle('on', b.dataset.v === draft.order));
   [...$('rowSeg').children].forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === draft.showRow));
+  [...$('timerSeg').children].forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === draft.timer));
   const sel = new Set(draft.rows);
   $('groups').innerHTML = GROUPS.map(g => `
     <div class="group">
@@ -517,6 +573,7 @@ $('groups').addEventListener('click', e => {
 $('scriptSeg').addEventListener('click', e => { const b=e.target.closest('button'); if(b){ draft.script=b.dataset.v; renderSettings(); } });
 $('orderSeg').addEventListener('click', e => { const b=e.target.closest('button'); if(b){ draft.order=b.dataset.v; renderSettings(); } });
 $('rowSeg').addEventListener('click', e => { const b=e.target.closest('button'); if(b){ draft.showRow=b.dataset.v==='1'; renderSettings(); } });
+$('timerSeg').addEventListener('click', e => { const b=e.target.closest('button'); if(b){ draft.timer=b.dataset.v==='1'; renderSettings(); } });
 $('applyBtn').addEventListener('click', () => { if(!draft.rows.length) return; settings = draft; saveSettings(); startFull(); });
 document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeOverlays));
 document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) closeOverlays(); }));
@@ -543,6 +600,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'escape') { if (S.view === 'reveal') backToRound(); }
 });
 
+document.addEventListener('visibilitychange', syncClock);
 startFull();
 </script>
 <script src="../drill-core/switcher.js"></script>
