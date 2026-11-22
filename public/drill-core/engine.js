@@ -71,13 +71,15 @@ function create(cfg){
 
   // ---------- Rounds ----------
   const ROUND_LABEL = {full:'', look:'look-alikes', weak:'weak spots', misses:'misses'};
-  const S = {deck:[], idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:'full', source:[], view:'drill'};
+  const S = {deck:[], idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:'full', source:[], view:'drill',
+             againCount:new Map(),   // card sid -> times "Show again" was pressed this round
+             sessionAgain:{}};       // same, running total for the whole page session (never reset, not saved)
 
   function startRound(items, type, forceOrder){
     S.source = items;
     const order = forceOrder || settings.order, sorter = cfg.sorters && cfg.sorters[order];
     S.deck = sorter ? items.slice().sort(sorter) : buildDeck(items, order);
-    Object.assign(S, {idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:type, view:'drill'});
+    Object.assign(S, {idx:-1, finished:false, peeked:new Set(), again:new Set(), againCount:new Map(), scored:new Set(), peekOn:false, round:type, view:'drill'});
     disarm(); closeOverlays(); render();
   }
   const startFull = () => startRound(fullItems(), 'full');
@@ -110,6 +112,9 @@ function create(cfg){
   function showAgain(){
     if (S.view !== 'drill' || S.idx < 0 || S.finished) return;
     S.again.add(S.idx);
+    const sid = S.deck[S.idx].sid;
+    S.againCount.set(sid, (S.againCount.get(sid) || 0) + 1);
+    S.sessionAgain[sid] = (S.sessionAgain[sid] || 0) + 1;
     const copy = {...S.deck[S.idx], again:true};
     const earliest = S.idx + 4;                     // at least 3 other cards in between
     const pos = earliest >= S.deck.length ? S.deck.length
@@ -117,6 +122,7 @@ function create(cfg){
     S.deck.splice(pos, 0, copy);
     next();
   }
+  const againLabel = sid => { const n = S.againCount.get(sid) || 0; return n > 1 ? 'again ×' + n : 'again'; };
   function peek(){
     if (S.view !== 'drill' || S.idx < 0 || S.finished) return;
     S.peekOn = !S.peekOn;
@@ -195,7 +201,7 @@ function create(cfg){
         romaji.textContent = v.front.text;
         sub.textContent = '';
         $('rowtag').textContent = v.rowTag || '';
-        $('peektag').textContent = [it.again ? 'again' : '', S.peeked.has(S.idx) ? 'peeked' : ''].filter(Boolean).join(' · ');
+        $('peektag').textContent = [it.again ? againLabel(it.sid) : '', S.peeked.has(S.idx) ? 'peeked' : ''].filter(Boolean).join(' · ');
         if (v.badge) { badge.style.display = ''; badge.textContent = v.badge.text; badge.className = 'scripttag' + (v.badge.cls ? ' ' + v.badge.cls : ''); }
         answer.className = 'answer' + (v.back.glyph ? ' glyph' : '') + (v.back.cls ? ' ' + v.back.cls : '') + (S.peekOn ? ' on' : '');
         answer.textContent = v.back.text;
@@ -219,7 +225,7 @@ function create(cfg){
         return `<div class="tile${flag ? ' peeked' : ''}"><span class="n">${i + 1}</span>`
           + (t.tag ? `<span class="st">${t.tag}</span>` : '')
           + `<div class="k">${t.main}</div><div class="r">${t.sub}</div>`
-          + (it.again ? '<span class="tg">again</span>' : '') + `</div>`;
+          + (it.again ? `<span class="tg">${againLabel(it.sid)}</span>` : '') + `</div>`;
       }).join('');
       $('backBtn').style.display = canContinue() ? '' : 'none';
       const mb = $('missBtn'); mb.disabled = !needs; mb.textContent = `Practice misses (${needs})`;
