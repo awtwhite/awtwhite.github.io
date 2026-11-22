@@ -213,12 +213,12 @@ const seg = (field, cur, opts) => '<div class="seg">' + opts.map(([v, label]) =>
 DrillCore.create({
   id: 'kanji-drill',
   modes: ['read'],   // reading only for now; writing (meaning -> kanji) can be added later
-  defaults: {mode:'read', order:'row', rows: ROW_ORDER.slice()},
+  defaults: {mode:'read', order:'row', timer:true, rows: ROW_ORDER.slice()},
   sanitize(s){
     if (!s || !Array.isArray(s.rows)) return null;
     const rows = s.rows.filter(id => ROWS[id]);
     if (!rows.length) return null;
-    return {mode:'read', order: s.order === 'mixed' ? 'mixed' : 'row', rows};
+    return {mode:'read', order: s.order === 'mixed' ? 'mixed' : 'row', timer: s.timer !== false, rows};
   },
   fullItems: s => s.rows.flatMap(id => ROWS[id].chars.map(c => makeItem(KANJI[c]))),
   lookItems: s => LOOKALIKES.flatMap((set, i) => [...set].map(c => makeItem(KANJI[c], 'look-' + i))),
@@ -241,18 +241,23 @@ DrillCore.create({
   settingsHTML(d){
     const sel = new Set(d.rows);
     return `
-    <div class="opt"><div><div class="lbl">Order</div><div class="hint">By row: finish one shuffled group before the next.</div></div>
-      ${seg('order', d.order, ORDERS)}</div>
+    ${DrillCore.section('What to practise')}
     ${GROUPS.map(g => `
     <div class="group">
       <div class="ghead"><span class="lbl">${g.name}</span>
         <span><button class="link" data-all="${g.id}">All</button><button class="link" data-none="${g.id}">None</button></span></div>
       <div class="chips">${g.rows.map(([id, label, chars]) =>
         `<button class="chip${sel.has(id) ? ' on' : ''}" data-row="${id}" aria-pressed="${sel.has(id)}"><span class="kh">${chars[0]}</span>${label}<span style="opacity:.55">${chars.length}</span></button>`).join('')}</div>
-    </div>`).join('')}`;
+    </div>`).join('')}
+    ${DrillCore.section('How the round runs')}
+    <div class="opt"><div><div class="lbl">Order</div><div class="hint">By row: finish one shuffled group before the next.</div></div>
+      ${seg('order', d.order, ORDERS)}</div>
+    <div class="opt"><div><div class="lbl">Timer</div><div class="hint">Read mode only. Times each card until you move on and shows it in Reveal all.</div></div>
+      ${seg('timer', d.timer ? '1' : '0', [['1','On'],['0','Off']])}</div>`;
   },
   settingsCount: d => d.rows.reduce((n, id) => n + ROWS[id].chars.length, 0),
   onSettingsClick(b, d){
+    if (b.dataset.set === 'timer') { d.timer = b.dataset.v === '1'; return; }
     if (b.dataset.set) { d[b.dataset.set] = b.dataset.v; return; }
     const set = new Set(d.rows);
     if (b.dataset.row) set.has(b.dataset.row) ? set.delete(b.dataset.row) : set.add(b.dataset.row);

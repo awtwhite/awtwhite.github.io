@@ -19,6 +19,9 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 ### Cross-app
 - [ ] Shared home/launcher page listing all drill apps.
 - [ ] Optional stroke-order hints (see per-language notes below).
+- [x] **Read-mode timing (recording).** Time on each card from when it appears until Next or Show again; pauses for panels, Reveal all and hidden tabs. Shown per card in Reveal all, colour-banded: under 1s proficient, up to 3s ok, 3–5s needs improvement, over 5s really needs improvement. Kept in memory for the page session only (`S.sessionTimes`). The **Timer** setting (On/Off, default On) switches recording and display on all three apps.
+- [ ] **Auto "again" from timers.** Use the recorded times to treat a slow card like Show again (re-queue it and score it as a miss) without a click: e.g. over 3s = needs improvement, over 5s = really needs improvement. Decide the thresholds and whether to apply them per card or to a character's average.
+- [ ] Timing follow-ups: also record time to first Peek (a cleaner measure of recall than time to Next), save timing history across sessions, show each character's average time, and feed slow characters into Weak spots.
 
 ---
 
