@@ -80,12 +80,12 @@
 </div>
 
 <div class="overlay" id="overlay">
-  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+  <div class="panel fixedfoot" role="dialog" aria-modal="true" aria-labelledby="sTitle">
     <div class="phead"><h2 id="sTitle">Settings</h2><button class="link" data-close>Close ✕</button></div>
-    <div id="settingsBody"></div>
+    <div id="settingsBody" class="pbody"></div>
     <div class="pfoot">
       <span class="count" id="selCount"></span>
-      <button class="primary" id="applyBtn">Start new round</button>
+      <button class="primary" id="applyBtn">Save &amp; start new round</button>
     </div>
   </div>
 </div>
@@ -217,5 +217,6 @@ DrillCore.create({
 });
 </script>
 <script src="../drill-core/switcher.js"></script>
+<script src="../drill-core/scrollfade.js"></script>
 </body>
 </html>

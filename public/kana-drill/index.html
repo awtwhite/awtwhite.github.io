@@ -78,9 +78,15 @@ kbd{font-family:inherit;font-size:.68em;font-weight:800;opacity:.55;margin-left:
 .drill{display:contents}
 .drill.off{display:none}
 /* settings */
-.overlay{position:fixed;inset:0;background:rgba(10,8,5,.45);display:none;align-items:flex-start;justify-content:center;padding:4vh 14px;overflow:auto;z-index:10}
+.overlay{position:fixed;inset:0;background:rgba(10,8,5,.45);display:none;align-items:flex-start;justify-content:center;padding:14px;overflow:auto;z-index:10}
 .overlay.open{display:flex}
 .panel{background:var(--card);color:var(--ink);border-radius:10px;width:min(660px,100%);padding:22px 22px 18px}
+.panel{max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px);overflow:auto}
+/* Settings: header and footer stay put, only the options scroll between them */
+.panel.fixedfoot{display:flex;flex-direction:column;overflow:hidden}
+.fixedfoot .pbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.fixedfoot .pbody.fade-bottom{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent)}
+.fixedfoot .pfoot{flex:none;margin-top:0;padding-top:14px;border-top:1px solid var(--line)}
 .phead{display:flex;justify-content:space-between;align-items:center}
 .phead h2{margin:0;font-size:22px}
 .opt{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -185,8 +191,9 @@ kbd{font-family:inherit;font-size:.68em;font-weight:800;opacity:.55;margin-left:
 </div>
 
 <div class="overlay" id="overlay">
-  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+  <div class="panel fixedfoot" role="dialog" aria-modal="true" aria-labelledby="sTitle">
     <div class="phead"><h2 id="sTitle">Settings</h2><button class="link" data-close>Close ✕</button></div>
+    <div class="pbody">
     <div class="opt">
       <div><div class="lbl">Script</div><div class="hint">Both: each sound appears once as hiragana and once as katakana.</div></div>
       <div class="seg" id="scriptSeg"><button data-v="h">Hiragana</button><button data-v="k">Katakana</button><button data-v="both">Both</button></div>
@@ -200,9 +207,10 @@ kbd{font-family:inherit;font-size:.68em;font-weight:800;opacity:.55;margin-left:
       <div class="seg" id="rowSeg"><button data-v="1">On</button><button data-v="0">Off</button></div>
     </div>
     <div id="groups"></div>
+    </div>
     <div class="pfoot">
       <span class="count" id="selCount"></span>
-      <button class="primary" id="applyBtn" style="background:var(--btn);color:var(--btn-ink)">Start new round</button>
+      <button class="primary" id="applyBtn" style="background:var(--btn);color:var(--btn-ink)">Save &amp; start new round</button>
     </div>
   </div>
 </div>
@@ -532,5 +540,6 @@ document.addEventListener('keydown', e => {
 startFull();
 </script>
 <script src="../drill-core/switcher.js"></script>
+<script src="../drill-core/scrollfade.js"></script>
 </body>
 </html>

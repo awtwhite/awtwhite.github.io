@@ -80,9 +80,15 @@ kbd{font-family:inherit;font-size:.68em;font-weight:800;opacity:.55;margin-left:
 .drill{display:contents}
 .drill.off{display:none}
 /* panels */
-.overlay{position:fixed;inset:0;background:rgba(10,8,5,.45);display:none;align-items:flex-start;justify-content:center;padding:4vh 14px;overflow:auto;z-index:10}
+.overlay{position:fixed;inset:0;background:rgba(10,8,5,.45);display:none;align-items:flex-start;justify-content:center;padding:14px;overflow:auto;z-index:10}
 .overlay.open{display:flex}
 .panel{background:var(--card);color:var(--ink);border-radius:10px;width:min(660px,100%);padding:22px 22px 18px}
+.panel{max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px);overflow:auto}
+/* Settings: header and footer stay put, only the options scroll between them */
+.panel.fixedfoot{display:flex;flex-direction:column;overflow:hidden}
+.fixedfoot .pbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.fixedfoot .pbody.fade-bottom{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent)}
+.fixedfoot .pfoot{flex:none;margin-top:0;padding-top:14px;border-top:1px solid var(--line)}
 .phead{display:flex;justify-content:space-between;align-items:center}
 .phead h2{margin:0;font-size:22px}
 .opt{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
