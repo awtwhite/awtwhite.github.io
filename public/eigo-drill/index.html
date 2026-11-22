@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eigo Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@600&family=Nunito:wght@400;600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../drill-core/ui.css">
+<style>
+:root{--face:Nunito,system-ui,sans-serif;--face-w:800}
+.seg button.fontopt{font-size:17px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="seal" id="seal">Aa</span><span id="brandName">Eigo Drill</span></div>
+  <div class="hright">
+    <div class="seg mini" id="modeSeg" title="Switch mode (M)"><button data-v="write">Write</button><button data-v="read">Read</button></div>
+    <span class="progress" id="progress">0 / 0</span>
+    <button class="iconbtn" id="roundsBtn">Rounds</button>
+    <button class="iconbtn" id="settingsBtn">Settings</button>
+  </div>
+</header>
+
+<main>
+  <div class="bar"><div id="barFill"></div></div>
+
+  <section class="drill" id="drill">
+    <div class="card" id="card">
+      <div class="rowtag" id="rowtag"></div>
+      <div class="scripttag" id="scripttag"></div>
+      <div class="peektag" id="peektag"></div>
+      <div class="romaji" id="romaji"></div>
+      <div class="sub" id="sub"></div>
+      <div class="answer" id="kana"></div>
+    </div>
+    <div class="controls">
+      <button class="big ghost" id="peekBtn">Peek<kbd>P</kbd></button>
+      <button class="big ghost again" id="againBtn">Show again<kbd>A</kbd></button>
+      <button class="big primary" id="nextBtn">Next<kbd>Space</kbd></button>
+    </div>
+    <div class="controls2">
+      <button class="small" id="revealBtn">Reveal all<kbd>E</kbd></button>
+      <button class="small" id="resetBtn">Reset<kbd>R</kbd></button>
+    </div>
+  </section>
+
+  <section class="reveal" id="reveal">
+    <h2 id="rTitle">Your round</h2>
+    <div class="meta" id="rMeta"></div>
+    <div class="grid" id="grid"></div>
+    <div class="rbtns">
+      <button class="small" id="backBtn">Back to round<kbd>Esc</kbd></button>
+      <button class="small" id="missBtn">Practice misses</button>
+      <button class="small" id="newBtn">New round<kbd>R</kbd></button>
+      <button class="small" id="otherBtn">Other rounds…</button>
+    </div>
+  </section>
+</main>
+
+<div class="overlay" id="roundsOverlay">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="rdTitle">
+    <div class="phead"><h2 id="rdTitle">Start a round</h2><button class="link" data-close>Close ✕</button></div>
+    <div class="rounds">
+      <button class="rcard" id="rFull"><b>Full round</b><span id="rFullHint"></span></button>
+      <button class="rcard" id="rLook"><b>Look-alike drill</b><span id="rLookHint"></span></button>
+      <button class="rcard" id="rWeak"><b>Weak spots</b><span id="rWeakHint"></span></button>
+    </div>
+    <div class="weak">
+      <div class="ghead"><span class="lbl">Your weak spots</span><button class="link" id="clearWeak">Clear history</button></div>
+      <div class="wchips" id="weakChips"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <div class="phead"><h2 id="sTitle">Settings</h2><button class="link" data-close>Close ✕</button></div>
+    <div id="settingsBody"></div>
+    <div class="pfoot">
+      <span class="count" id="selCount"></span>
+      <button class="primary" id="applyBtn">Start new round</button>
+    </div>
+  </div>
+</div>
+
+<script src="../drill-core/engine.js"></script>
+<script>
+// ---------- Data ----------
+const NAMES = {A:'ay',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'gee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'el',M:'em',
+  N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',U:'you',V:'vee',W:'double-u',X:'ex',Y:'why',Z:'zed'};
+// Numbers: 1-9, 10-90 (tens) and 100-900 (hundreds). Each is a multi-character card, e.g. '40' or '700'.
+const ONES = ['one','two','three','four','five','six','seven','eight','nine'];
+const TENS = ['ten','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+ONES.forEach((n, i) => {
+  NAMES[i + 1] = n;
+  NAMES[(i + 1) * 10] = TENS[i];
+  NAMES[(i + 1) * 100] = n + ' hundred';
+});
+const numRange = step => [1,2,3,4,5,6,7,8,9].map(n => String(n * step));
+
+// Rows are the unit for "by row" ordering and for the Settings chips: [id, chip label, cards (array of ids)]
+const GROUPS = [
+  {id:'letters', name:'Letters', rows:[
+    ['a-e','A–E',[...'ABCDE']], ['f-j','F–J',[...'FGHIJ']], ['k-o','K–O',[...'KLMNO']], ['p-t','P–T',[...'PQRST']], ['u-z','U–Z',[...'UVWXYZ']],
+  ]},
+  {id:'numbers', name:'Numbers', rows:[
+    ['n1','1–9',numRange(1)], ['n10','10–90',numRange(10)], ['n100','100–900',numRange(100)],
+  ]},
+];
+// Easily confused sets (strings of letters, or arrays of ids). Letters are listed by capital and display in
+// whichever case the settings use. A set is skipped when fewer than two of its cards are in the selected rows.
+const LOOKALIKES = ['BDPQ','MNW','HNR','UVY','CEO','IJL', ['S','5'], ['Z','2'], ['I','1'], ['6','9'], ['3','8'],
+  ['60','90'], ['30','80'], ['600','900'], ['300','800']];
+
+const ROWS = {}, ROW_ORDER = [], BY_ID = {};
+GROUPS.forEach(g => g.rows.forEach(([id, label, chars]) => {
+  ROWS[id] = {id, label, group:g.id, chars};
+  ROW_ORDER.push(id);
+  chars.forEach(c => { BY_ID[c] = {id:c, name:NAMES[c], row:id, kind: /^\d+$/.test(c) ? 'number' : 'letter'}; });
+}));
+const makeItem = (base, key) => ({sid:base.id, id:base.id, name:base.name, row:base.row, kind:base.kind, key: key || base.row});
+
+// What a card shows depends on the Case setting: A, a, or Aa.
+const CASE_LABEL = {upper:'capital', lower:'lowercase', both:'capital + lowercase'};
+const glyph = (it, s) => it.kind === 'number' ? it.id
+  : s.case === 'upper' ? it.id : s.case === 'lower' ? it.id.toLowerCase() : it.id + it.id.toLowerCase();
+
+const FONTS = {
+  sans:  {label:'Sans',        css:'Nunito,system-ui,sans-serif',                w:800},
+  serif: {label:'Serif',       css:"Lora,Georgia,'Times New Roman',serif",       w:600},
+  hand:  {label:'Handwriting', css:"'Patrick Hand','Comic Sans MS',cursive",     w:400},
+};
+
+// Order setting. A–Z and Z–A put letters first, then numbers (numerically); Z–A reverses both.
+const ORDERS = [['row','By row'], ['mixed','Fully mixed'], ['az','A–Z'], ['za','Z–A']];
+const byOrder = dir => (a, b) => {
+  if (a.kind !== b.kind) return a.kind === 'letter' ? -1 : 1;
+  const d = a.kind === 'number' ? Number(a.id) - Number(b.id) : (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  return d * dir;
+};
+
+// ---------- App ----------
+const seg = (field, cur, opts) => '<div class="seg">' + opts.map(([v, label, style]) =>
+  `<button data-set="${field}" data-v="${v}" class="${v === cur ? 'on' : ''}"${style ? ` style="${style}"` : ''}>${label}</button>`).join('') + '</div>';
+
+DrillCore.create({
+  id: 'eigo-drill',
+  sorters: {az: byOrder(1), za: byOrder(-1)},
+  modes: ['read'],   // Write mode is built but switched off for now: add 'write' here to bring it back
+  defaults: {mode:'read', case:'both', font:'sans', order:'row', rows: ROW_ORDER.slice()},
+  sanitize(s){
+    if (!s || !Array.isArray(s.rows)) return null;
+    const rows = s.rows.filter(id => ROWS[id]);
+    if (!rows.length) return null;
+    return {mode: 'read', case: CASE_LABEL[s.case] ? s.case : 'both', font: FONTS[s.font] ? s.font : 'sans',
+            order: ORDERS.some(o => o[0] === s.order) ? s.order : 'row', rows};
+  },
+  applySettings(s){
+    const f = FONTS[s.font], root = document.documentElement.style;
+    root.setProperty('--face', f.css); root.setProperty('--face-w', f.w);
+  },
+  fullItems: s => s.rows.flatMap(id => ROWS[id].chars.map(c => makeItem(BY_ID[c]))),
+  lookItems(s){
+    return LOOKALIKES.flatMap((set, i) => [...set].map(c => makeItem(BY_ID[c], 'look-' + i)));
+  },
+  inScope: (it, s) => s.rows.includes(it.row),
+  itemFromSid: sid => BY_ID[sid] ? makeItem(BY_ID[sid]) : null,
+  brand: s => ['Aa', 'Eigo Drill'],
+  prompts: {
+    write: 'You see the name of a letter or number. Write it on paper, then peek to check.',
+    read:  'Say the name of each character, then peek to check.',
+  },
+  view(it, reading, s){
+    const g = glyph(it, s);
+    return reading
+      ? {front:{text:g, glyph:true}, back:{text:it.name, glyph:false}}
+      : {front:{text:it.name, glyph:false}, back:{text:g, glyph:true},
+         badge:{text: it.kind === 'number' ? 'number' : CASE_LABEL[s.case], cls: s.case === 'lower' && it.kind === 'letter' ? 'inv' : ''}};
+  },
+  tile: (it, mixed, s) => ({main: glyph(it, s), sub: it.name}),
+  fullHint: (s, n) => `${n} characters from your selected rows (${CASE_LABEL[s.case]}).`,
+  lookHint: (s, n) => `${n} easily confused characters, drilled set by set (e.g. b/d/p/q, 6/9).`,
+
+  settingsHTML(d){
+    const sel = new Set(d.rows);
+    return `
+    <div class="opt"><div><div class="lbl">Case</div><div class="hint">Both shows each letter as a pair, e.g. Aa. Numbers are unaffected.</div></div>
+      ${seg('case', d.case, [['upper','Capital'],['lower','Lowercase'],['both','Both']])}</div>
+    <div class="opt"><div><div class="lbl">Font</div><div class="hint">Applies to the characters on the card.</div></div>
+      ${seg('font', d.font, Object.entries(FONTS).map(([v, f]) => [v, f.label, `font-family:${f.css};font-weight:${f.w}`]))}</div>
+    <div class="opt"><div><div class="lbl">Order</div><div class="hint">By row: finish one shuffled row before the next. A–Z / Z–A: letters in order, then numbers.</div></div>
+      ${seg('order', d.order, ORDERS)}</div>
+    ${GROUPS.map(g => `
+    <div class="group">
+      <div class="ghead"><span class="lbl">${g.name}</span>
+        <span><button class="link" data-all="${g.id}">All</button><button class="link" data-none="${g.id}">None</button></span></div>
+      <div class="chips">${g.rows.map(([id, label]) =>
+        `<button class="chip${sel.has(id) ? ' on' : ''}" data-row="${id}" aria-pressed="${sel.has(id)}">${label}</button>`).join('')}</div>
+    </div>`).join('')}`;
+  },
+  settingsCount: d => d.rows.reduce((n, id) => n + ROWS[id].chars.length, 0),
+  onSettingsClick(b, d){
+    if (b.dataset.set) { d[b.dataset.set] = b.dataset.v; return; }
+    const set = new Set(d.rows);
+    if (b.dataset.row) set.has(b.dataset.row) ? set.delete(b.dataset.row) : set.add(b.dataset.row);
+    else if (b.dataset.all) GROUPS.find(g => g.id === b.dataset.all).rows.forEach(r => set.add(r[0]));
+    else if (b.dataset.none) GROUPS.find(g => g.id === b.dataset.none).rows.forEach(r => set.delete(r[0]));
+    d.rows = ROW_ORDER.filter(id => set.has(id));
+  },
+});
+</script>
+</body>
+</html>

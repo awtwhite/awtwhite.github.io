@@ -26,6 +26,11 @@ export default defineConfig({
 					link: '/kana-drill/',
 					attrs: { target: '_blank' },
 				},
+				{
+					label: 'Eigo Drill',
+					link: '/eigo-drill/',
+					attrs: { target: '_blank' },
+				},
 			],
 		}),
 	],
