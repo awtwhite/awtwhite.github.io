@@ -310,12 +310,14 @@ const lookItems = () => scriptsOf(settings.script).flatMap(sc =>
   LOOKALIKES[sc].flatMap((set, gi) => [...set].map(ch => makeItem(BY_KANA[ch], sc, 'look-' + sc + gi))));
 
 const ROUND_LABEL = {full:'', look:'look-alikes', weak:'weak spots', misses:'misses'};
-const S = {deck:[], idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:'full', source:[], view:'drill'};
+const S = {deck:[], idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:'full', source:[], view:'drill',
+           againCount:new Map(),   // statKey -> times "Show again" was pressed this round
+           sessionAgain:{}};       // same, running total for the whole page session (never reset, not saved)
 
 function startRound(items, type, forceOrder){
   S.source = items;
   S.deck = buildDeck(items, forceOrder || settings.order);
-  Object.assign(S, {idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:type, view:'drill'});
+  Object.assign(S, {idx:-1, finished:false, peeked:new Set(), again:new Set(), againCount:new Map(), scored:new Set(), peekOn:false, round:type, view:'drill'});
   disarm(); closeOverlays(); render();
 }
 const startFull = () => startRound(fullItems(), 'full');
@@ -348,6 +350,9 @@ function next(){
 function showAgain(){
   if (S.view !== 'drill' || S.idx < 0 || S.finished) return;
   S.again.add(S.idx);
+  const ak = statKey(S.deck[S.idx]);
+  S.againCount.set(ak, (S.againCount.get(ak) || 0) + 1);
+  S.sessionAgain[ak] = (S.sessionAgain[ak] || 0) + 1;
   const copy = {...S.deck[S.idx], again:true};
   const earliest = S.idx + 4;                     // at least 3 other cards in between
   const pos = earliest >= S.deck.length ? S.deck.length
@@ -355,6 +360,7 @@ function showAgain(){
   S.deck.splice(pos, 0, copy);
   next();
 }
+const againLabel = it => { const n = S.againCount.get(statKey(it)) || 0; return n > 1 ? 'again ×' + n : 'again'; };
 function peek(){
   if (S.view !== 'drill' || S.idx < 0 || S.finished) return;
   S.peekOn = !S.peekOn;
@@ -430,7 +436,7 @@ function render(){
       romaji.className = 'romaji' + (reading ? ' kanaface' : ''); romaji.textContent = reading ? it.k : it.r;
       sub.textContent = '';
       if (settings.showRow && !reading && S.round !== 'look') $('rowtag').textContent = it.row + '-row';
-      $('peektag').textContent = [it.again ? 'again' : '', S.peeked.has(S.idx) ? 'peeked' : ''].filter(Boolean).join(' · ');
+      $('peektag').textContent = [it.again ? againLabel(it) : '', S.peeked.has(S.idx) ? 'peeked' : ''].filter(Boolean).join(' · ');
       if (!reading) { st.style.display = ''; st.textContent = SCRIPT_NAME[it.script]; st.className = 'scripttag' + (it.script === 'k' ? ' kata' : ''); }
       kana.className = 'kana' + (reading ? ' latin' : '') + (S.peekOn ? ' on' : ''); kana.textContent = reading ? it.r : it.k;
     }
@@ -452,7 +458,7 @@ function render(){
       return `<div class="tile${flag?' peeked':''}"><span class="n">${i+1}</span>`
         + (mixedScripts ? `<span class="st">${it.script==='k'?'kata':'hira'}</span>` : '')
         + `<div class="k">${it.k}</div><div class="r">${it.r}</div>`
-        + (it.again ? '<span class="tg">again</span>' : '') + `</div>`;
+        + (it.again ? `<span class="tg">${againLabel(it)}</span>` : '') + `</div>`;
     }).join('');
     $('backBtn').style.display = canContinue() ? '' : 'none';
     const mb = $('missBtn'); mb.disabled = !needs; mb.textContent = `Practice misses (${needs})`;
