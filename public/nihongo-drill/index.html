@@ -111,6 +111,9 @@
 // ---------- Words (parsed from data.js) ----------
 // Line format: japanese | english | topic | kind (w/p/c) | verb group. "@id" starts a group.
 const ROWS = {}, ROW_ORDER = [], BY_SID = {};
+const THEME_OF = {}; NIHONGO_THEMES.forEach(t => t.topics.forEach(tp => { THEME_OF[tp] = t.id; }));
+const TYPE_IDS = NIHONGO_TYPES.map(t => t.id), THEME_IDS = NIHONGO_THEMES.map(t => t.id);
+const ITEMS = [];     // every word, in book order
 
 // Where a line may break inside Japanese text. The page never breaks Japanese except at these points
 // (CSS word-break: keep-all). "·" in data.js marks a point; so does a space the book wrote.
@@ -127,11 +130,16 @@ NIHONGO_GROUPS.forEach(g => { ROWS[g.id] = Object.assign({}, g, {items: []}); RO
     const line = raw.trim();
     if (!line) return;
     if (line[0] === '@') { cur = line.slice(1); if (!ROWS[cur]) throw new Error('Unknown group ' + cur); return; }
-    const [rawJa, en, topic, kind, vg] = line.split('|');
+    const [rawJa, en, topic, kind, vg, type] = line.split('|');
+    if (!THEME_OF[topic]) throw new Error('Topic "' + topic + '" is not in a theme: ' + rawJa);
+    if (!TYPE_IDS.includes(type)) throw new Error('Unknown word type "' + type + '": ' + rawJa);
     const sid = cur + ':' + rawJa.split(BREAK).join('');          // the id ignores the break markers
     if (BY_SID[sid]) throw new Error('Duplicate word in ' + cur + ': ' + rawJa);
-    const it = {sid, id: sid, ja: breakable(rawJa), en, topic: topic || '', kind: kind || 'w', vg: vg || '', row: cur, key: cur};
-    ROWS[cur].items.push(it); BY_SID[sid] = it;
+    const it = {sid, id: sid, ja: breakable(rawJa), en, topic, kind: kind || 'w', vg: vg || '', type, theme: THEME_OF[topic], row: cur, key: cur,
+      cls: +cur.replace(/\D/g, ''),                                                     // book class number (counters carry theirs too)
+      loan: /[\u30A0-\u30FF]/.test(rawJa) && !/[\u3040-\u309F]/.test(rawJa),          // katakana and no hiragana: a loanword
+      sapporo: topic === 'wards'};
+    ROWS[cur].items.push(it); BY_SID[sid] = it; ITEMS.push(it);
   });
 })();
 
