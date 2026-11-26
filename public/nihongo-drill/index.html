@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="pink">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nihongo Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../drill-core/ui.css">
+<style>
+/* Every word is shown at the same size on the card (overrides the shared size steps for this app).
+   Sized so a 9-character word fits on one line: that is 95% of the list; only longer phrases wrap.
+   The card text area is min(680px, 100vw - 80px) wide, and 9.2 allows a little slack. */
+.romaji.glyph,.romaji.glyph.len1,.romaji.glyph.len2,.romaji.glyph.len3{font-size:min(4.6rem,calc((100vw - 100px) / 9.2));line-height:1.25}
+/* Reveal all: bigger tiles, three per row (two on phones), every word at one size so none wraps.
+   --tw is the width of a tile's text area; the word size is that width / 9.6, capped at 28px. */
+#grid{--cols:2;grid-template-columns:repeat(var(--cols),1fr)}
+@media (min-width:640px){#grid{--cols:3}}
+#grid{--tw:calc((min(980px, 100vw - 40px) - (var(--cols) - 1) * 10px) / var(--cols) - 20px)}
+#grid .tile .k,#grid .tile .k.len1,#grid .tile .k.len2,#grid .tile .k.len3,#grid .tile .k.len4{font-size:min(28px, calc(var(--tw) / 9.6));line-height:1.3}
+#grid .tile .r{font-size:15px}
+/* Group chips carry a name, a one-line blurb and a count */
+.chip.wide{flex-direction:column;align-items:flex-start;gap:0;border-radius:8px;padding:8px 12px;text-align:left}
+.chip.wide small{font-weight:600;opacity:.65;font-size:12px;line-height:1.3}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="brand"><span class="seal" id="seal">語</span><span id="brandName">Nihongo Drill</span></div>
+    <div class="hbtns">
+      <button class="iconbtn" id="roundsBtn">Rounds</button>
+      <button class="iconbtn sq" id="settingsBtn" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    </div>
+  </div>
+  <div class="hrow">
+    <div class="seg mini" id="modeSeg"><button data-v="write">Write</button><button data-v="read">Read</button></div>
+    <span class="progress" id="progress">0 / 0</span>
+  </div>
+</header>
+
+<main>
+  <div class="bar"><div id="barFill"></div></div>
+
+  <section class="drill" id="drill">
+    <div class="card" id="card">
+      <div class="rowtag" id="rowtag"></div>
+      <div class="scripttag" id="scripttag"></div>
+      <div class="peektag" id="peektag"></div>
+      <div class="romaji" id="romaji"></div>
+      <div class="sub" id="sub"></div>
+      <div class="answer" id="kana"></div>
+      <div class="answer-sub" id="answerSub"></div>
+    </div>
+    <div class="controls">
+      <button class="big ghost" id="peekBtn">Peek<kbd>P</kbd></button>
+      <button class="big ghost again" id="againBtn">Show again<kbd>A</kbd></button>
+      <button class="big primary" id="nextBtn">Next<kbd>Space</kbd></button>
+    </div>
+    <div class="controls2">
+      <button class="small" id="revealBtn">Reveal all<kbd>E</kbd></button>
+      <button class="small" id="resetBtn">Reset<kbd>R</kbd></button>
+    </div>
+  </section>
+
+  <section class="reveal" id="reveal">
+    <h2 id="rTitle">Your round</h2>
+    <div class="meta" id="rMeta"></div>
+    <div class="grid" id="grid"></div>
+    <div class="rbtns">
+      <button class="small" id="backBtn">Back to round<kbd>Esc</kbd></button>
+      <button class="small" id="missBtn">Practice misses</button>
+      <button class="small" id="newBtn">New round<kbd>R</kbd></button>
+      <button class="small" id="otherBtn">Other rounds…</button>
+    </div>
+  </section>
+</main>
+
+<div class="overlay" id="roundsOverlay">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="rdTitle">
+    <div class="phead"><h2 id="rdTitle">Start a round</h2><button class="link" data-close>Close ✕</button></div>
+    <div class="rounds">
+      <button class="rcard" id="rFull"><b>Full round</b><span id="rFullHint"></span></button>
+      <button class="rcard" id="rLook"><b>Look-alike drill</b><span id="rLookHint"></span></button>
+      <button class="rcard" id="rWeak"><b>Weak spots</b><span id="rWeakHint"></span></button>
+    </div>
+    <div class="weak">
+      <div class="ghead"><span class="lbl">Your weak spots</span><button class="link" id="clearWeak">Clear history</button></div>
+      <div class="wchips" id="weakChips"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel fixedfoot" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <div class="phead"><h2 id="sTitle">Settings</h2><button class="link" data-close>Close ✕</button></div>
+    <div id="settingsBody" class="pbody"></div>
+    <div class="pfoot">
+      <span class="count" id="selCount"></span>
+      <button class="primary" id="applyBtn">Save &amp; start new round</button>
+    </div>
+  </div>
+</div>
+
+<script src="../drill-core/engine.js"></script>
+<script src="data.js"></script>
+<script>
+// ---------- Words (parsed from data.js) ----------
+// Line format: japanese | english | topic | kind (w/p/c) | verb group. "@id" starts a group.
+const ROWS = {}, ROW_ORDER = [], BY_SID = {};
+NIHONGO_GROUPS.forEach(g => { ROWS[g.id] = Object.assign({}, g, {items: []}); ROW_ORDER.push(g.id); });
+(() => {
+  let cur = null;
+  NIHONGO_TEXT.split('\n').forEach(raw => {
+    const line = raw.trim();
+    if (!line) return;
+    if (line[0] === '@') { cur = line.slice(1); if (!ROWS[cur]) throw new Error('Unknown group ' + cur); return; }
+    const [ja, en, topic, kind, vg] = line.split('|');
+    const sid = cur + ':' + ja;
+    if (BY_SID[sid]) throw new Error('Duplicate word in ' + cur + ': ' + ja);
+    const it = {sid, id: sid, ja, en, topic: topic || '', kind: kind || 'w', vg: vg || '', row: cur, key: cur};
+    ROWS[cur].items.push(it); BY_SID[sid] = it;
+  });
+})();
+
+// Settings lists the classes and the counters as two blocks
+const SETS = [
+  {id:'classes',  name:'Classes',  rows: ROW_ORDER.filter(id => !ROWS[id].counters)},
+  {id:'counters', name:'Counters', rows: ROW_ORDER.filter(id =>  ROWS[id].counters)},
+];
+
+// ---------- App ----------
+const ORDERS = [['row','By group'], ['mixed','Fully mixed']];
+const seg = (field, cur, opts) => '<div class="seg">' + opts.map(([v, label]) =>
+  `<button data-set="${field}" data-v="${v}" class="${v === cur ? 'on' : ''}">${label}</button>`).join('') + '</div>';
+
+DrillCore.create({
+  id: 'nihongo-drill',
+  modes: ['read'],   // read only for now (Japanese -> English); other directions can come later
+  flow: 'grade',     // Reveal, then Try again / Got it (no Peek)
+  preview: true,     // "Preview all" before a round starts: every selected word, grouped
+  groupTitle: it => `${ROWS[it.row].name}: ${ROWS[it.row].blurb} (${ROWS[it.row].items.length})`,
+  labels: {reveal:'Reveal', missed:'Try again', got:'Got it'},
+  defaults: {mode:'read', order:'row', timer:true, rows:['c1']},
+  sanitize(s){
+    if (!s || !Array.isArray(s.rows)) return null;
+    const rows = s.rows.filter(id => ROWS[id]);
+    if (!rows.length) return null;
+    return {mode:'read', order: s.order === 'mixed' ? 'mixed' : 'row', timer: s.timer !== false, rows};
+  },
+  fullItems: s => s.rows.flatMap(id => ROWS[id].items),
+  inScope: (it, s) => s.rows.includes(it.row),
+  itemFromSid: sid => BY_SID[sid] || null,
+  brand: () => ['語', 'Nihongo Drill'],
+  prompts: {
+    write: '',
+    read: 'Recall the meaning of each Japanese word, then reveal to check.',
+  },
+  view: it => ({front:{text: it.ja, glyph:true}, back:{text: it.en, glyph:false, cls: it.en.length > 24 ? 'xs' : 'sm'}}),
+  tile: it => ({main: it.ja, sub: it.en}),
+  fullHint: (s, n) => `${n} words from your selected groups.`,
+
+  settingsHTML(d){
+    const sel = new Set(d.rows);
+    return `
+    ${DrillCore.section('What to practise')}
+    ${SETS.map(g => `
+    <div class="group">
+      <div class="ghead"><span class="lbl">${g.name}</span>
+        <span><button class="link" data-all="${g.id}">All</button><button class="link" data-none="${g.id}">None</button></span></div>
+      <div class="chips">${g.rows.map(id => { const r = ROWS[id];
+        return `<button class="chip wide${sel.has(id) ? ' on' : ''}" data-row="${id}" aria-pressed="${sel.has(id)}"><span>${r.name} <span style="opacity:.55">${r.items.length}</span></span><small>${r.blurb}</small></button>`; }).join('')}</div>
+    </div>`).join('')}
+    ${DrillCore.section('How the round runs')}
+    <div class="opt"><div><div class="lbl">Order</div><div class="hint">By group: finish one shuffled group before the next.</div></div>
+      ${seg('order', d.order, ORDERS)}</div>
+    <div class="opt"><div><div class="lbl">Timer</div><div class="hint">Times how long you take to reveal each card and shows it in Reveal all.</div></div>
+      ${seg('timer', d.timer ? '1' : '0', [['1','On'],['0','Off']])}</div>`;
+  },
+  settingsCount: d => d.rows.reduce((n, id) => n + ROWS[id].items.length, 0),
+  onSettingsClick(b, d){
+    if (b.dataset.set === 'timer') { d.timer = b.dataset.v === '1'; return; }
+    if (b.dataset.set) { d[b.dataset.set] = b.dataset.v; return; }
+    const set = new Set(d.rows);
+    if (b.dataset.row) set.has(b.dataset.row) ? set.delete(b.dataset.row) : set.add(b.dataset.row);
+    else if (b.dataset.all) SETS.find(g => g.id === b.dataset.all).rows.forEach(r => set.add(r));
+    else if (b.dataset.none) SETS.find(g => g.id === b.dataset.none).rows.forEach(r => set.delete(r));
+    d.rows = ROW_ORDER.filter(id => set.has(id));
+  },
+});
+</script>
+<script src="../drill-core/switcher.js"></script>
+<script src="../drill-core/scrollfade.js"></script>
+</body>
+</html>

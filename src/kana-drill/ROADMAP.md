@@ -31,6 +31,7 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 |---|---|---|
 | **English letters & numbers** | A–Z (upper/lower), 0–9, maybe punctuation | **Built as Eigo Drill** (`public/eigo-drill/`). Write mode shows the letter name ("bee"); Read mode shows the character. Ideas for more: phonics sound prompts (/b/), "capital → write lowercase" mode, punctuation, separate upper/lower cards, sight words. |
 | **Kanji Drill** | Kanji → meaning + on/kun readings. Jōyō set (2,136): grade 1 (80), grade 2 (160), then up to grade 6 (1,026 total) | **Prototype started** (`public/kanji-drill/`, grade 1 only, hand-entered data). Separate app on `drill-core`. See "Kanji Drill" under TODOs. Top ~1,000 kanji cover about 90% of everyday text. |
+| **Nihongo Drill** | Japanese words from the Beginner Japanese Classes 2 vocabulary list (Sapporo), grouped by class, English on Peek | **Built** (`public/nihongo-drill/`, 355 cards from Classes 1-8; plan and decisions in `src/nihongo-drill/PLAN.md`). Read-only, pink theme, on `drill-core`. |
 | **Korean Hangul** | Consonants, vowels, then syllable blocks | Same shape as kana: rows = consonant groups. |
 | **Cyrillic / Greek / Arabic / Hebrew alphabets** | Letters with transliteration | Mostly just new data once the core is shared. |
 | **Numbers in other languages** | 1–100 | Later. |
@@ -63,6 +64,23 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 - [ ] Look-alike sets beyond grade 1 (e.g. 未/末, 土/士, 待/持).
 - [ ] Example words per kanji (e.g. 日本, 火曜日) and stroke-order hints.
 - [ ] JLPT level filter (N5–N1) as an alternative to school grades.
+
+### Nihongo Drill
+- [x] First version: Classes 1-8 as groups (counters split out), English on Peek, pink theme, 355 cards.
+- [x] **Preview all** before a round starts (every selected word, grouped, nothing scored). Optional in the engine (`preview: true`); could be offered in the other apps too.
+- [ ] **Reset before a round starts** only reshuffles the deck and shows the same Ready screen (no visible effect). Disable it until a round has started, in every app.
+- [x] Card flow: **Reveal**, then **Try again** / **Got it** (no Peek). Time is measured to Reveal. Button names are `labels` in the app config.
+- [ ] Auto-**missed** from the timer: treat a slow Reveal (over 3s, or 5s) as a miss without asking. (Same idea as the general "auto again from timers" item.)
+- [ ] Offer the Reveal / Got it / Try again flow as an option in the other apps (Kana, Eigo, Kanji), where the engine already supports it (`flow: 'grade'`).
+- [ ] The small "Reveal all" button sits next to the new Reveal button and the names are close; consider renaming it ("Review round") in apps that use the grade flow.
+- [ ] **Romaji option (small, below the Japanese word).** The book's romaji is its own spelling (jyuusho, kooen); decide between that and Hepburn converted from the kana, as in Kana Drill.
+- [ ] **Show the verb group (1)(2)(3)** as a hint on Peek. The data already has it (`vg`).
+- [ ] **Sentences group.** Phrases and sentences are tagged (`kind` = p); add a group of all of them, and an alternative lesson option (study by sentence).
+- [ ] **Topic groups in Settings** (wards and directions, jobs, food and restaurant, personal details, counters, family, home and places, animals, vegetables, location words, verbs, hobbies and sports, clothes and shopping, time, phrases). Every word already has a `topic` tag, so this needs no re-entry.
+- [ ] Review the Sapporo-specific words (the wards and some shop/food terms); decide whether they stay in the core list or move to an optional "Sapporo" group.
+- [ ] **Check the transcription against the book.** Three deliberate changes to confirm: 2割引 written as "20% off" (the book says 2%); 10% and 10%引 written out in kana from the book's romaji; counters given descriptive English.
+- [ ] Optional: Write mode (English to Japanese) once Read mode is settled.
+- [ ] Optional: a Class 1 starter default is used; consider remembering the last selection per device (already saved) vs a "start here" suggestion for new users.
 
 ### Eigo Drill
 - [ ] Number groups are 1–9, 10–90 and 100–900 (no zero). Later: zero, teens (11–19), 1000+, mixed numbers like 47 and 305.

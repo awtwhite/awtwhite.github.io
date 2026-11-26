@@ -36,6 +36,11 @@ export default defineConfig({
 					link: '/kanji-drill/',
 					attrs: { target: '_blank' },
 				},
+				{
+					label: 'Nihongo Drill',
+					link: '/nihongo-drill/',
+					attrs: { target: '_blank' },
+				},
 			],
 		}),
 	],
