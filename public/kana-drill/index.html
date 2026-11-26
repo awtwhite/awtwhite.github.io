@@ -301,7 +301,18 @@ const itemsFor = (rowId, sc) => ROWS[rowId].items.map(it => makeItem(it, sc));
 const statKey = it => it.script + ':' + it.k;
 
 // ---------- Settings (remembered in this browser) ----------
-const KEY = 'hiragana-drill-settings-v1';
+// Storage keys are namespaced per app. The old keys are moved across once so nobody loses settings or history.
+function moveKey(oldKey, newKey){
+  try {
+    const v = localStorage.getItem(oldKey);
+    if (v === null) return;
+    if (localStorage.getItem(newKey) === null) localStorage.setItem(newKey, v);
+    localStorage.removeItem(oldKey);
+  } catch(e) {}
+}
+moveKey('hiragana-drill-settings-v1', 'kana-drill:settings');
+moveKey('kana-drill-stats-v1', 'kana-drill:stats');
+const KEY = 'kana-drill:settings';
 const DEFAULTS = {mode:'write', script:'h', order:'row', showRow:true, timer:true, rows: GROUPS[0].rows.map(r => r[0])};
 function loadSettings(){
   try {
@@ -319,7 +330,7 @@ let settings = loadSettings();
 
 // ---------- Weak-spot memory ----------
 // Each character gets a score: +2 when peeked or marked "Show again", -1 when answered cleanly (0–10).
-const SKEY = 'kana-drill-stats-v1';
+const SKEY = 'kana-drill:stats';
 function loadStats(){ try { const o = JSON.parse(localStorage.getItem(SKEY)); if (o && typeof o === 'object') return o; } catch(e) {} return {}; }
 function saveStats(){ try { localStorage.setItem(SKEY, JSON.stringify(stats)); } catch(e) {} }
 let stats = loadStats();
@@ -448,6 +459,7 @@ function updateArmed(){
   c.textContent = armedId === 'clear' ? 'Click again to clear' : 'Clear history';
 }
 function reset(){
+  if (S.idx < 0) return;                         // before a round starts there is nothing to reset
   const inProgress = S.view === 'drill' && S.idx >= 0 && !S.finished;
   if (inProgress && !confirmPress('reset')) return;
   restart();
@@ -501,6 +513,7 @@ function render(){
     $('againBtn').disabled = !active;
     $('nextBtn').innerHTML = (S.finished ? 'Reveal all' : S.idx < 0 ? 'Start' : 'Next') + '<kbd>Space</kbd>';
     $('revealBtn').disabled = S.idx < 0;
+    $('resetBtn').disabled = S.idx < 0;
   } else {
     const list = S.deck.slice(0, shown);
     const needs = missItems().length;

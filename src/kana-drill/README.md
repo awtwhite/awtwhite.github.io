@@ -2,19 +2,19 @@
 
 A single-page web app for practising **hiragana** and **katakana**. You can practise **writing** (see the romaji, write the kana on paper) or **reading** (see the kana, say the romaji). Cards come in a random order so you can't learn the sequence instead of the characters.
 
-Everything is in one file, `kana-drill.html`. There is nothing to install and no server to run.
+The app is a single page, `public/kana-drill/index.html`, with its own code and styles inline. It also loads two small shared scripts from `public/drill-core/` (the app switcher and the scroll fade), so keep that folder alongside it.
 
 ---
 
 ## Getting started
 
-1. Save `kana-drill.html` anywhere on your computer.
-2. Double-click it to open it in your browser (Chrome, Edge, Firefox or Safari).
-3. Press **Start** (or **Space**) to begin.
+1. Run the site: `npm install`, then `npm run dev -- --host`. Open `http://localhost:4321/kana-drill/index.html` (in dev the full `index.html` path is needed; on the deployed site it is just `/kana-drill/`).
+   Or open `public/kana-drill/index.html` straight from the repo in your browser; it works from a file as long as `public/drill-core/` is next to it.
+2. Press **Start** (or **Space**) to begin.
 
 **Notes**
 - The page loads two fonts from Google Fonts: *Klee One* for the kana (a textbook-style handwriting font that is good for copying stroke shapes) and *Nunito* for the text. Without an internet connection it still works, but it uses your system fonts.
-- Your settings and weak-spot history are saved in your browser (`localStorage`). They stay on that computer and in that browser only, and are lost if you clear your browser data.
+- Your settings and weak-spot history are saved in your browser (`localStorage`, under `kana-drill:settings` and `kana-drill:stats`). They stay on that computer and in that browser only, and are lost if you clear your browser data. Earlier versions used other key names; they are moved across automatically the first time the page loads.
 
 ---
 
@@ -87,6 +87,7 @@ Characters you keep getting right drop off the list over time. The Rounds panel 
 | **Script** | Hiragana · Katakana · Both. With Both, each sound appears once in each script. |
 | **Order** | By row · Fully mixed |
 | **Show row name** | On · Off (Write mode only) |
+| **Timer** | On · Off (default On). In Read mode, times each card until you move on and shows the time on each card in Reveal all. |
 | **Rows** | Turn each row on or off, in three groups, each with All / None buttons: **Basic** (あ to ん, 46), **Dakuten & handakuten** (が ざ だ ば ぱ, 25), **Combinations / yōon** (きゃ to ぴゃ, 33). |
 
 Press **Start new round** to apply your changes. Your settings are remembered for next time.
@@ -113,7 +114,7 @@ On touch screens the shortcut hints are hidden, and everything works with the bu
 
 ## Where things are in the code
 
-All the code is in the `<script>` at the bottom of `kana-drill.html`.
+All the code is in the `<script>` at the bottom of `public/kana-drill/index.html`. Kana Drill still carries its own copy of the shared engine (`public/drill-core/`) that the other apps use; moving it onto the shared one is on the roadmap (`ROADMAP.md`).
 
 | What | Where |
 |---|---|
@@ -122,8 +123,10 @@ All the code is in the `<script>` at the bottom of `kana-drill.html`.
 | Katakana | Generated from the hiragana by `toKata()`. Katakana sits exactly `0x60` above hiragana in Unicode. |
 | Shuffling (by row / mixed) | `buildDeck()` |
 | Show again re-insertion | `showAgain()` |
-| Weak-spot scoring | `scoreCard()`. History is stored under the `kana-drill-stats-v1` key. |
-| Saved settings | stored under the `hiragana-drill-settings-v1` key |
+| Weak-spot scoring | `scoreCard()`. History is stored under the `kana-drill:stats` key. |
+| Saved settings | stored under the `kana-drill:settings` key |
+| Show again counts | `S.againCount` (this round) and `S.sessionAgain` (this page session) |
+| Read-mode timing | `syncClock()` and `finishCard()`; times are in `S.times` and `S.sessionTimes` |
 
 ---
 

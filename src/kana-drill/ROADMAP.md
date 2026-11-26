@@ -31,6 +31,7 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 |---|---|---|
 | **English letters & numbers** | A–Z (upper/lower), 0–9, maybe punctuation | **Built as Eigo Drill** (`public/eigo-drill/`). Write mode shows the letter name ("bee"); Read mode shows the character. Ideas for more: phonics sound prompts (/b/), "capital → write lowercase" mode, punctuation, separate upper/lower cards, sight words. |
 | **Kanji Drill** | Kanji → meaning + on/kun readings. Jōyō set (2,136): grade 1 (80), grade 2 (160), then up to grade 6 (1,026 total) | **Prototype started** (`public/kanji-drill/`, grade 1 only, hand-entered data). Separate app on `drill-core`. See "Kanji Drill" under TODOs. Top ~1,000 kanji cover about 90% of everyday text. |
+| **Nihongo Drill** | Japanese words from the Beginner Japanese Classes 2 vocabulary list (Sapporo), grouped by class, English on Peek | **Built** (`public/nihongo-drill/`, 355 cards from Classes 1-8; plan and decisions in `src/nihongo-drill/PLAN.md`). Read-only, pink theme, on `drill-core`. |
 | **Korean Hangul** | Consonants, vowels, then syllable blocks | Same shape as kana: rows = consonant groups. |
 | **Cyrillic / Greek / Arabic / Hebrew alphabets** | Letters with transliteration | Mostly just new data once the core is shared. |
 | **Numbers in other languages** | 1–100 | Later. |
@@ -40,9 +41,9 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 ## 3. TODOs
 
 ### Housekeeping
-- [ ] Fix the stale README. It refers to `kana-drill.html`; the file is `public/kana-drill/index.html`. Update "Getting started" and "Where things are in the code".
-- [ ] Namespace localStorage keys per app (`kana-drill:settings`, `kana-drill:stats`). The settings key is currently `hiragana-drill-settings-v1`. Migrate the existing keys so nobody loses history.
-- [ ] Sidebar link in `astro.config.mjs` still uses the Starlight starter title and links ("My Docs", Example Guide). Clean up.
+- [x] Fix the stale Kana README (file name, getting started, where things are in the code; added Timer and the new storage keys).
+- [x] Namespace Kana's localStorage keys (`kana-drill:settings`, `kana-drill:stats`); the old keys are moved across once on load, so no history is lost.
+- [x] Replaced the Starlight starter placeholders: site title, GitHub link, sidebar (now one "Drill apps" group linking to `/<app>/index.html`, which works in dev too), the home page, and removed the example guide/reference pages and the template image. The repo's root `README.md` is still the Starlight starter text.
 
 ### Codebase organisation (decision made: share a core, keep separate apps)
 - [x] Create `public/drill-core/engine.js` and `ui.css` (built with Eigo Drill).
@@ -63,6 +64,28 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 - [ ] Look-alike sets beyond grade 1 (e.g. 未/末, 土/士, 待/持).
 - [ ] Example words per kanji (e.g. 日本, 火曜日) and stroke-order hints.
 - [ ] JLPT level filter (N5–N1) as an alternative to school grades.
+
+### Nihongo Drill
+- [x] First version: Classes 1-8 as groups (counters split out), English shown on Reveal, pink theme, 355 cards.
+- [x] **Line breaks in long phrases** are controlled: a `·` in `data.js` marks where a line may break (26 entries marked; spaces and slashes are handled automatically). When adding words, mark long phrases the same way; see the `data.js` header.
+- [x] **Preview all** before a round starts (every selected word, grouped, nothing scored). Optional in the engine (`preview: true`); could be offered in the other apps too.
+- [x] **Reset** is disabled until a round has started (it only reshuffled the deck before), in every app.
+- [x] Card flow: **Reveal**, then **Try again** / **Got it** (no Peek). Time is measured to Reveal. Button names are `labels` in the app config.
+- [ ] Auto-**missed** from the timer: treat a slow Reveal (over 3s, or 5s) as a miss without asking. (Same idea as the general "auto again from timers" item.)
+- [ ] Offer the Reveal / Got it / Try again flow as an option in the other apps (Kana, Eigo, Kanji), where the engine already supports it (`flow: 'grade'`).
+- [x] In the grade flow the small "Reveal all" button (and the finished-round button) is called "Review round"; `labels.revealAll` in the config changes it.
+- [ ] **Romaji option (small, below the Japanese word).** The book's romaji is its own spelling (jyuusho, kooen); decide between that and Hepburn converted from the kana, as in Kana Drill.
+- [ ] **Show the verb group (1)(2)(3)** as a hint when a verb is revealed. (It is already shown in the Study page's Type view, grouped under Verbs.)
+- [x] **Sentences group:** Study > Type > "Phrases & sentences" (27) lists them all, and Settings > Choose by Type can drill just them. [ ] Still to do: an alternative lesson option (study by sentence).
+- [x] **Theme and word-type groups** (Study page and Settings > Choose by). Every word has one theme (12, rolled up from 30 topic tags), one word type (noun, verb, i- or na-adjective, adverb, connector, phrase, counter) and a book class; loanwords and Sapporo words are filters.
+- [x] **Study page** (replaces Preview all): browse by Theme, Type, Class or your Weak words; tap a word to flip it, or Hide English to test yourself; search; filter chips (Loanwords, Sapporo, My selection); Practise these on any section.
+- [ ] **Check the word types and themes in `data.js`** (hand-checked pre-fill: 168 nouns, 34 verbs, 11 i-adjectives, 7 na-adjectives, 8 adverbs, 7 connectors, 27 phrases, 93 counters). Counters are sub-grouped by what they count, worked out from the English.
+- [ ] Study page ideas: star words as "needs work" (feeds Weak spots); reverse mode (English first, recall the Japanese); a "seen / not seen" status (needs the drill to remember cards it has shown; the weak list only keeps words with a score above zero); remember the chosen view and open sections.
+- [ ] Verbs: group by plain form vs ます form, or show the other forms.
+- [ ] Review the Sapporo-specific words (the wards and some shop/food terms); decide whether they stay in the core list or move to an optional "Sapporo" group.
+- [ ] **Check the transcription against the book.** Three deliberate changes to confirm: 2割引 written as "20% off" (the book says 2%); 10% and 10%引 written out in kana from the book's romaji; counters given descriptive English.
+- [ ] Optional: Write mode (English to Japanese) once Read mode is settled.
+- [ ] Optional: a Class 1 starter default is used; consider remembering the last selection per device (already saved) vs a "start here" suggestion for new users.
 
 ### Eigo Drill
 - [ ] Number groups are 1–9, 10–90 and 100–900 (no zero). Later: zero, teens (11–19), 1000+, mixed numbers like 47 and 305.

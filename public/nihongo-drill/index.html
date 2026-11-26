@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="pink">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nihongo Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../drill-core/ui.css">
+<style>
+/* Every word is shown at the same size on the card (overrides the shared size steps for this app).
+   Sized so a 9-character word fits on one line: that is 95% of the list; only longer phrases wrap.
+   The card text area is min(680px, 100vw - 80px) wide, and 9.2 allows a little slack. */
+.romaji.glyph,.romaji.glyph.len1,.romaji.glyph.len2,.romaji.glyph.len3{font-size:min(4.6rem,calc((100vw - 100px) / 9.2));line-height:1.25}
+/* Japanese breaks only at the marked points; if one part is wider than the line it may still break inside it */
+.romaji.glyph,#grid .tile .k,.wchip .kh{word-break:keep-all;overflow-wrap:anywhere}
+/* Reveal all: bigger tiles, three per row (two on phones), every word at one size so none wraps.
+   --tw is the width of a tile's text area; the word size is that width / 9.6, capped at 28px. */
+#grid{--cols:2;grid-template-columns:repeat(var(--cols),1fr)}
+@media (min-width:640px){#grid{--cols:3}}
+#grid{--tw:calc((min(980px, 100vw - 40px) - (var(--cols) - 1) * 10px) / var(--cols) - 20px)}
+#grid .tile .k,#grid .tile .k.len1,#grid .tile .k.len2,#grid .tile .k.len3,#grid .tile .k.len4{font-size:min(28px, calc(var(--tw) / 9.6));line-height:1.3}
+#grid .tile .r{font-size:15px}
+/* Study page: browse every word by theme, word type or class, flip to check */
+.study{width:min(980px,100%);display:none}
+.study.on{display:block}
+.study h2{margin:0;font-size:28px}
+.study .smeta{color:var(--muted);font-weight:600;margin-top:4px}
+.study .stop{display:flex;gap:6px;margin:0 0 14px}
+.study .stop button{flex:0 0 auto}
+.study button.small.primary{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.study .seg button{white-space:nowrap}
+.sbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0 6px}
+.sbar .lbl{font-weight:800;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.sinput{font:inherit;font-weight:600;padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);flex:1 1 180px;min-width:0}
+.schip{font:inherit;font-weight:700;font-size:14px;padding:6px 11px;border:1px solid var(--line);border-radius:99px;background:rgba(0,0,0,.12);color:var(--ink);cursor:pointer}
+.schip.on{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.sec{border:1px solid var(--line);border-radius:8px;background:var(--card);margin:10px 0}
+.sec>summary{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;list-style:none;font-weight:800;font-size:17px}
+.sec>summary::-webkit-details-marker{display:none}
+.sec>summary::before{content:'';width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s;flex:none}
+.sec[open]>summary::before{transform:rotate(45deg)}
+.sec .sc{color:var(--muted);font-weight:700;font-size:14px}
+.sec .sp{margin-left:auto;flex:none}
+.sec .sbody{padding:0 14px 14px}
+.subh{margin:14px 0 8px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.subh:first-child{margin-top:4px}
+.stiles{display:grid;gap:10px;--cols:2;grid-template-columns:repeat(var(--cols),1fr);--tw:calc((min(980px, 100vw - 40px) - 28px - 2px - (var(--cols) - 1) * 10px) / var(--cols) - 20px)}
+@media (min-width:640px){.stiles{--cols:3}}
+.wtile{font:inherit;color:var(--ink);text-align:center;cursor:pointer;padding:12px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.wtile .k{display:block;font-family:var(--face);font-weight:var(--face-w);font-size:min(28px, calc(var(--tw) / 9.6));line-height:1.3;word-break:keep-all;overflow-wrap:anywhere}
+.wtile .r{display:block;font-weight:800;color:var(--muted);font-size:15px;line-height:1.25;overflow-wrap:anywhere;margin-top:2px}
+.study:not(.hide-en) .wtile.flip .r{visibility:hidden}
+.study.hide-en .wtile:not(.flip) .r{visibility:hidden}
+.sempty{color:var(--muted);font-weight:600;padding:18px 4px}
+/* Group chips carry a name, a one-line blurb and a count */
+.chip.wide{flex-direction:column;align-items:flex-start;gap:0;border-radius:8px;padding:8px 12px;text-align:left}
+.chip.wide small{font-weight:600;opacity:.65;font-size:12px;line-height:1.3}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="brand"><span class="seal" id="seal">語</span><span id="brandName">Nihongo Drill</span></div>
+    <div class="hbtns">
+      <button class="iconbtn" id="roundsBtn">Rounds</button>
+      <button class="iconbtn sq" id="settingsBtn" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    </div>
+  </div>
+  <div class="hrow">
+    <div class="seg mini" id="modeSeg"><button data-v="write">Write</button><button data-v="read">Read</button></div>
+    <span class="progress" id="progress">0 / 0</span>
+  </div>
+</header>
+
+<main>
+  <div class="bar"><div id="barFill"></div></div>
+
+  <section class="drill" id="drill">
+    <div class="card" id="card">
+      <div class="rowtag" id="rowtag"></div>
+      <div class="scripttag" id="scripttag"></div>
+      <div class="peektag" id="peektag"></div>
+      <div class="romaji" id="romaji"></div>
+      <div class="sub" id="sub"></div>
+      <div class="answer" id="kana"></div>
+      <div class="answer-sub" id="answerSub"></div>
+    </div>
+    <div class="controls">
+      <button class="big ghost" id="peekBtn">Peek<kbd>P</kbd></button>
+      <button class="big ghost again" id="againBtn">Show again<kbd>A</kbd></button>
+      <button class="big primary" id="nextBtn">Next<kbd>Space</kbd></button>
+    </div>
+    <div class="controls2">
+      <button class="small" id="revealBtn">Reveal all<kbd>E</kbd></button>
+      <button class="small" id="resetBtn">Reset<kbd>R</kbd></button>
+    </div>
+  </section>
+
+  <section class="study" id="study"></section>
+
+  <section class="reveal" id="reveal">
+    <h2 id="rTitle">Your round</h2>
+    <div class="meta" id="rMeta"></div>
+    <div class="grid" id="grid"></div>
+    <div class="rbtns">
+      <button class="small" id="backBtn">Back to round<kbd>Esc</kbd></button>
+      <button class="small" id="missBtn">Practice misses</button>
+      <button class="small" id="newBtn">New round<kbd>R</kbd></button>
+      <button class="small" id="otherBtn">Other rounds…</button>
+    </div>
+  </section>
+</main>
+
+<div class="overlay" id="roundsOverlay">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="rdTitle">
+    <div class="phead"><h2 id="rdTitle">Start a round</h2><button class="link" data-close>Close ✕</button></div>
+    <div class="rounds">
+      <button class="rcard" id="rFull"><b>Full round</b><span id="rFullHint"></span></button>
+      <button class="rcard" id="rLook"><b>Look-alike drill</b><span id="rLookHint"></span></button>
+      <button class="rcard" id="rWeak"><b>Weak spots</b><span id="rWeakHint"></span></button>
+    </div>
+    <div class="weak">
+      <div class="ghead"><span class="lbl">Your weak spots</span><button class="link" id="clearWeak">Clear history</button></div>
+      <div class="wchips" id="weakChips"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel fixedfoot" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <div class="phead"><h2 id="sTitle">Settings</h2><button class="link" data-close>Close ✕</button></div>
+    <div id="settingsBody" class="pbody"></div>
+    <div class="pfoot">
+      <span class="count" id="selCount"></span>
+      <button class="primary" id="applyBtn">Save &amp; start new round</button>
+    </div>
+  </div>
+</div>
+
+<script src="../drill-core/engine.js"></script>
+<script src="data.js"></script>
+<script>
+// ---------- Words (parsed from data.js) ----------
+// Line format: japanese | english | topic | kind (w/p/c) | verb group. "@id" starts a group.
+const ROWS = {}, ROW_ORDER = [], BY_SID = {};
+const THEME_OF = {}; NIHONGO_THEMES.forEach(t => t.topics.forEach(tp => { THEME_OF[tp] = t.id; }));
+const TYPE_IDS = NIHONGO_TYPES.map(t => t.id), THEME_IDS = NIHONGO_THEMES.map(t => t.id);
+const ITEMS = [];     // every word, in book order
+
+// Where a line may break inside Japanese text. The page never breaks Japanese except at these points
+// (CSS word-break: keep-all). "·" in data.js marks a point; so does a space the book wrote.
+const BREAK = '·', ZWSP = '\u200B', NBSP = '\u00A0';
+const breakable = raw => raw
+  .split(BREAK).join(ZWSP)                     // marked point -> invisible break
+  .replace(/ \/ /g, NBSP + '/ ')               // "a / b": the slash stays with a, the line breaks after it
+  .replace(/(?<!\/) /g, ZWSP)                  // other spaces (from the book) -> invisible break
+  .replace(/\/(?=[^ \u200B])/g, '/' + ZWSP);   // "a/b": break allowed after the slash
+NIHONGO_GROUPS.forEach(g => { ROWS[g.id] = Object.assign({}, g, {items: []}); ROW_ORDER.push(g.id); });
+(() => {
+  let cur = null;
+  NIHONGO_TEXT.split('\n').forEach(raw => {
+    const line = raw.trim();
+    if (!line) return;
+    if (line[0] === '@') { cur = line.slice(1); if (!ROWS[cur]) throw new Error('Unknown group ' + cur); return; }
+    const [rawJa, en, topic, kind, vg, type] = line.split('|');
+    if (!THEME_OF[topic]) throw new Error('Topic "' + topic + '" is not in a theme: ' + rawJa);
+    if (!TYPE_IDS.includes(type)) throw new Error('Unknown word type "' + type + '": ' + rawJa);
+    const sid = cur + ':' + rawJa.split(BREAK).join('');          // the id ignores the break markers
+    if (BY_SID[sid]) throw new Error('Duplicate word in ' + cur + ': ' + rawJa);
+    const it = {sid, id: sid, ja: breakable(rawJa), en, topic, kind: kind || 'w', vg: vg || '', type, theme: THEME_OF[topic], row: cur, key: cur,
+      cls: +cur.replace(/\D/g, ''),                                                     // book class number (counters carry theirs too)
+      loan: /[\u30A0-\u30FF]/.test(rawJa) && !/[\u3040-\u309F]/.test(rawJa),          // katakana and no hiragana: a loanword
+      sapporo: topic === 'wards'};
+    ROWS[cur].items.push(it); BY_SID[sid] = it; ITEMS.push(it);
+  });
+})();
+
+// Settings lists the classes and the counters as two blocks
+const SETS = [
+  {id:'classes',  name:'Classes',  rows: ROW_ORDER.filter(id => !ROWS[id].counters)},
+  {id:'counters', name:'Counters', rows: ROW_ORDER.filter(id =>  ROWS[id].counters)},
+];
+
+// What to practise can be chosen by class (the book), theme, or word type. settings.by says which one is
+// active; each keeps its own ticks (rows = classes, themes, types) so switching back loses nothing.
+const axisOf = (it, by) => by === 'theme' ? it.theme : by === 'type' ? it.type : it.row;
+const axisIds = s => s.by === 'theme' ? s.themes : s.by === 'type' ? s.types : s.rows;
+const inSelection = (it, s) => axisIds(s).includes(axisOf(it, s.by));
+const selectedItems = s => ITEMS.filter(it => inSelection(it, s)).map(it => ({...it, key: axisOf(it, s.by)}));   // key = what "by group" order keeps together
+const countBy = k => ITEMS.reduce((m, it) => (m[it[k]] = (m[it[k]] || 0) + 1, m), {});
+const THEME_N = countBy('theme'), TYPE_N = countBy('type');
+const themeBlurb = t => t.topics.map(x => NIHONGO_TOPIC_NAMES[x] || x).join(', ');
+const chip = (attr, id, on, name, n, blurb) => `<button class="chip wide${on ? ' on' : ''}" data-${attr}="${id}" aria-pressed="${on}"><span>${name} <span style="opacity:.55">${n}</span></span><small>${blurb}</small></button>`;
+
+// ---------- Study page ----------
+// Browse every word grouped by theme, word type, class or your weak words. Tap a word to flip it
+// (hide the English first to test yourself), and practise any section as a round of its own.
+const CTYPE_ORDER = ['items', 'people', 'long things', 'age', 'minutes', 'hours', 'floors', 'small items'];
+const CTYPE_TESTS = [['small items', /small item/], ['items', /item/], ['people', /person|people/], ['long things', /long thing/], ['age', /year|old/], ['minutes', /minute/], ['hours', /hour/], ['floors', /floor|basement/]];
+const ctype = it => { for (const [n, re] of CTYPE_TESTS) if (re.test(it.en)) return n; return 'other'; };
+const STUDY = {by:'theme', hide:false, q:'', flags:new Set(), open:new Set(), groups:[], api:null, el:null};
+const FLAGS = [['loan', 'Loanwords', it => it.loan], ['sapporo', 'Sapporo', it => it.sapporo], ['mine', 'My selection', it => STUDY.api && inSelection(it, STUDY.api.settings())]];
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+function bucket(items, keyOf, order, nameOf) {                        // items -> [{name, items}] in a fixed order
+  const m = new Map(); items.forEach(it => { const k = keyOf(it); if (!m.has(k)) m.set(k, []); m.get(k).push(it); });
+  const keys = [...m.keys()].sort((a, b) => (order.indexOf(a) < 0 ? 99 : order.indexOf(a)) - (order.indexOf(b) < 0 ? 99 : order.indexOf(b)));
+  return keys.map(k => ({id: k, name: nameOf(k), items: m.get(k)}));
+}
+function studyGroups(items, by) {
+  const groups = [];
+  if (by === 'theme') {
+    NIHONGO_THEMES.forEach(t => {
+      const its = items.filter(it => it.theme === t.id); if (!its.length) return;
+      const subs = t.id === 'counters' ? bucket(its, ctype, CTYPE_ORDER, k => 'Counting ' + k)
+                                       : bucket(its, it => it.topic, t.topics, k => NIHONGO_TOPIC_NAMES[k] || k);
+      groups.push({id: 'th-' + t.id, name: t.name, items: its, subs: subs.length > 1 ? subs : null});
+    });
+  } else if (by === 'type') {
+    NIHONGO_TYPES.forEach(t => {
+      const its = items.filter(it => it.type === t.id); if (!its.length) return;
+      let subs = null;
+      if (t.id === 'verb') subs = bucket(its, it => it.vg || '?', ['1', '2', '3', '?'], k => k === '?' ? 'Group not marked' : 'Group ' + k);
+      if (t.id === 'counter') subs = bucket(its, ctype, CTYPE_ORDER, k => 'Counting ' + k);
+      groups.push({id: 'ty-' + t.id, name: t.name, items: its, subs: subs && subs.length > 1 ? subs : null});
+    });
+  } else if (by === 'class') {
+    ROW_ORDER.forEach(id => { const its = items.filter(it => it.row === id); if (its.length) groups.push({id: 'cl-' + id, name: ROWS[id].name + ': ' + ROWS[id].blurb, items: its, subs: null}); });
+  } else {                                                               // weak: from your drill history
+    const st = STUDY.api ? STUDY.api.stats() : {};
+    const tiers = [['Missing a lot', 6, 99], ['Needs work', 3, 5], ['Getting there', 1, 2]];
+    tiers.forEach(([name, lo, hi]) => {
+      const its = items.filter(it => (st[it.sid] || 0) >= lo && (st[it.sid] || 0) <= hi).sort((a, b) => st[b.sid] - st[a.sid]);
+      if (its.length) groups.push({id: 'wk-' + lo, name, items: its, subs: null});
+    });
+  }
+  return groups;
+}
+const tileHTML = it => `<button class="wtile" data-sid="${esc(it.sid)}"><span class="k">${it.ja}</span><span class="r">${esc(it.en)}</span></button>`;
+function drawStudy() {
+  const q = STUDY.q.trim().toLowerCase(), flags = [...STUDY.flags];
+  const items = ITEMS.filter(it => (!q || it.ja.replace(/​| /g, '').includes(q) || it.en.toLowerCase().includes(q)) && flags.every(f => FLAGS.find(x => x[0] === f)[2](it)));
+  STUDY.groups = studyGroups(items, STUDY.by);
+  const force = !!q || flags.length > 0;                                 // searching or filtering: open everything that matches
+  STUDY.el.querySelector('.smeta').textContent = `${items.length} of ${ITEMS.length} words` + (STUDY.by === 'weak' ? ' (your weak words are the ones you marked Try again)' : '') + '. Tap a word to flip it.';
+  STUDY.el.classList.toggle('hide-en', STUDY.hide);
+  STUDY.el.querySelectorAll('[data-by]').forEach(b => b.classList.toggle('on', b.dataset.by === STUDY.by));
+  STUDY.el.querySelector('[data-hide]').classList.toggle('on', STUDY.hide);
+  STUDY.el.querySelectorAll('[data-flag]').forEach(b => b.classList.toggle('on', STUDY.flags.has(b.dataset.flag)));
+  STUDY.el.querySelector('.sbody').innerHTML = STUDY.groups.length ? STUDY.groups.map((g, i) => {
+    const open = force || STUDY.open.has(g.id) || (STUDY.open.size === 0 && i === 0);
+    const inner = g.subs ? g.subs.map(sb => `<div class="subh">${esc(sb.name)} <span class="sc">${sb.items.length}</span></div><div class="stiles">${sb.items.map(tileHTML).join('')}</div>`).join('')
+                         : `<div class="stiles">${g.items.map(tileHTML).join('')}</div>`;
+    return `<details class="sec" data-gid="${g.id}"${open ? ' open' : ''}><summary><span>${esc(g.name)}</span><span class="sc">${g.items.length}</span><button class="link sp" data-sec="${i}">Practise these</button></summary><div class="sbody">${inner}</div></details>`;
+  }).join('') : `<div class="sempty">${STUDY.by === 'weak' && !q && !flags.length ? 'Nothing here yet. Words you mark Try again will collect here.' : 'No words match.'}</div>`;
+}
+function renderStudy(el, api) {
+  STUDY.api = api; STUDY.el = el;
+  el.innerHTML = `
+    <div class="stop"><button class="small" data-back>Back</button><button class="small primary" data-start>Start round</button></div>
+    <h2>Study</h2><div class="smeta"></div>
+    <div class="sbar"><span class="lbl">Group by</span><div class="seg">
+      <button data-by="theme">Theme</button><button data-by="type">Type</button><button data-by="class">Class</button><button data-by="weak">Weak words</button></div></div>
+    <div class="sbar"><input class="sinput" type="search" placeholder="Search Japanese or English" value="${esc(STUDY.q)}">
+      <button class="schip" data-hide>Hide English</button>${FLAGS.map(f => `<button class="schip" data-flag="${f[0]}">${f[1]}</button>`).join('')}</div>
+    <div class="sbody"></div>`;
+  drawStudy();
+}
+document.getElementById('study').addEventListener('click', e => {
+  const t = e.target, b = t.closest('button'); if (!b) return;
+  if (b.dataset.back !== undefined) STUDY.api.back();
+  else if (b.dataset.start !== undefined) STUDY.api.start();
+  else if (b.dataset.by) { STUDY.by = b.dataset.by; STUDY.open.clear(); drawStudy(); }
+  else if (b.dataset.hide !== undefined) { STUDY.hide = !STUDY.hide; STUDY.el.querySelectorAll('.wtile.flip').forEach(x => x.classList.remove('flip')); drawStudy(); }
+  else if (b.dataset.flag) { STUDY.flags.has(b.dataset.flag) ? STUDY.flags.delete(b.dataset.flag) : STUDY.flags.add(b.dataset.flag); drawStudy(); }
+  else if (b.dataset.sec !== undefined) { e.preventDefault(); STUDY.api.practice(STUDY.groups[+b.dataset.sec].items); }
+  else if (b.classList.contains('wtile')) b.classList.toggle('flip');
+});
+document.getElementById('study').addEventListener('input', e => { if (e.target.classList.contains('sinput')) { STUDY.q = e.target.value; drawStudy(); } });
+document.getElementById('study').addEventListener('toggle', e => { const d = e.target; if (d.dataset && d.dataset.gid) { d.open ? STUDY.open.add(d.dataset.gid) : STUDY.open.delete(d.dataset.gid); } }, true);
+
+// ---------- App ----------
+const ORDERS = [['row','By group'], ['mixed','Fully mixed']];
+const seg = (field, cur, opts) => '<div class="seg">' + opts.map(([v, label]) =>
+  `<button data-set="${field}" data-v="${v}" class="${v === cur ? 'on' : ''}">${label}</button>`).join('') + '</div>';
+
+DrillCore.create({
+  id: 'nihongo-drill',
+  modes: ['read'],   // read only for now (Japanese -> English); other directions can come later
+  flow: 'grade',     // Reveal, then Try again / Got it (no Peek)
+  study: {label: 'Study', render: renderStudy},   // before a round starts: browse the words, flip to check
+  labels: {reveal:'Reveal', missed:'Try again', got:'Got it'},
+  defaults: {mode:'read', order:'row', timer:true, by:'class', rows:['c1'], themes:THEME_IDS.slice(), types:TYPE_IDS.slice()},
+  sanitize(s){
+    if (!s || !Array.isArray(s.rows)) return null;
+    const rows = s.rows.filter(id => ROWS[id]);
+    const keep = (list, ids) => Array.isArray(list) ? list.filter(id => ids.includes(id)) : ids.slice();   // settings saved before themes/types existed: all ticked
+    const out = {mode:'read', order: s.order === 'mixed' ? 'mixed' : 'row', timer: s.timer !== false,
+                 by: ['class', 'theme', 'type'].includes(s.by) ? s.by : 'class', rows, themes: keep(s.themes, THEME_IDS), types: keep(s.types, TYPE_IDS)};
+    return axisIds(out).length ? out : null;                                                                // nothing ticked: fall back to the defaults
+  },
+  fullItems: selectedItems,
+  inScope: (it, s) => inSelection(it, s),
+  itemFromSid: sid => BY_SID[sid] || null,
+  brand: () => ['語', 'Nihongo Drill'],
+  prompts: {
+    write: '',
+    read: 'Recall the meaning of each Japanese word, then reveal to check.',
+  },
+  view: it => ({front:{text: it.ja, glyph:true}, back:{text: it.en, glyph:false, cls: it.en.length > 24 ? 'xs' : 'sm'}}),
+  tile: it => ({main: it.ja, sub: it.en}),
+  fullHint: (s, n) => `${n} words from your selected groups.`,
+
+  settingsHTML(d){
+    const sel = new Set(axisIds(d));
+    const block = (id, name, chips) => `
+    <div class="group">
+      <div class="ghead"><span class="lbl">${name}</span>
+        <span><button class="link" data-all="${id}">All</button><button class="link" data-none="${id}">None</button></span></div>
+      <div class="chips">${chips}</div>
+    </div>`;
+    const blocks = d.by === 'theme' ? block('themes', 'Themes', NIHONGO_THEMES.map(t => chip('theme', t.id, sel.has(t.id), t.name, THEME_N[t.id] || 0, themeBlurb(t))).join(''))
+                 : d.by === 'type'  ? block('types', 'Word types', NIHONGO_TYPES.map(t => chip('type', t.id, sel.has(t.id), t.name, TYPE_N[t.id] || 0, t.blurb)).join(''))
+                 : SETS.map(g => block(g.id, g.name, g.rows.map(id => chip('row', id, sel.has(id), ROWS[id].name, ROWS[id].items.length, ROWS[id].blurb)).join(''))).join('');
+    return `
+    ${DrillCore.section('What to practise')}
+    <div class="opt"><div><div class="lbl">Choose by</div><div class="hint">Pick words by the book's classes, by theme (food, family, getting around...) or by word type (verbs, nouns...). Each keeps its own ticks.</div></div>
+      ${seg('by', d.by, [['class','Class'],['theme','Theme'],['type','Type']])}</div>
+    ${blocks}
+    ${DrillCore.section('How the round runs')}
+    <div class="opt"><div><div class="lbl">Order</div><div class="hint">By group: finish one shuffled group before the next.</div></div>
+      ${seg('order', d.order, ORDERS)}</div>
+    <div class="opt"><div><div class="lbl">Timer</div><div class="hint">Times how long you take to reveal each card and shows it in Reveal all.</div></div>
+      ${seg('timer', d.timer ? '1' : '0', [['1','On'],['0','Off']])}</div>`;
+  },
+  settingsCount: d => ITEMS.filter(it => inSelection(it, d)).length,
+  onSettingsClick(b, d){
+    if (b.dataset.set === 'timer') { d.timer = b.dataset.v === '1'; return; }
+    if (b.dataset.set) { d[b.dataset.set] = b.dataset.v; return; }
+    // one ticked list per way of choosing: classes (rows), themes, types
+    const A = b.dataset.row || b.dataset.all === 'classes' || b.dataset.all === 'counters' || b.dataset.none === 'classes' || b.dataset.none === 'counters'
+              ? {key:'rows', all: ROW_ORDER}
+              : (b.dataset.theme || b.dataset.all === 'themes' || b.dataset.none === 'themes') ? {key:'themes', all: THEME_IDS} : {key:'types', all: TYPE_IDS};
+    const set = new Set(d[A.key]), one = b.dataset.row || b.dataset.theme || b.dataset.type;
+    if (one) set.has(one) ? set.delete(one) : set.add(one);
+    else {
+      const ids = b.dataset.all || b.dataset.none, group = SETS.find(g => g.id === ids);
+      (group ? group.rows : A.all).forEach(id => (b.dataset.all ? set.add(id) : set.delete(id)));
+    }
+    d[A.key] = A.all.filter(id => set.has(id));
+  },
+});
+</script>
+<script src="../drill-core/switcher.js"></script>
+<script src="../drill-core/scrollfade.js"></script>
+</body>
+</html>

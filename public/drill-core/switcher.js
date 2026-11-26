@@ -14,6 +14,7 @@ const APPS = [
   {id:'kana-drill',  name:'Kana Drill',  sub:'Hiragana & katakana', seal:'あ',  accent:'#6b46c1'},
   {id:'eigo-drill',  name:'Eigo Drill',  sub:'Letters & numbers',   seal:'Aa', accent:'#2f7d4f'},
   {id:'kanji-drill', name:'Kanji Drill', sub:'Grade 1 kanji',       seal:'漢',  accent:'#2b6cb0'},
+  {id:'nihongo-drill', name:'Nihongo Drill', sub:'Japanese words',    seal:'語',  accent:'#c2255c'},
 ];
 
 const CSS = `
