@@ -119,6 +119,8 @@ Sapporo wards and directions · Jobs · Food and restaurant · Personal details 
 
 11. **Preview all:** before a round starts, the small "Reveal all" button (disabled until then) becomes **Preview all** (key V). It opens a page listing every card of the selected groups in book order, under group headings, with the English. Nothing is scored. Back returns to Ready; Start round (or Space) begins. Implemented as an optional `preview` / `groupTitle` in the shared engine; other apps are unchanged.
 
+12. **Line breaks inside long phrases:** parts are marked by hand with a `·` in `data.js` (26 entries: phrases and compound words), because the browser's own Japanese segmentation is poor on kana-only text. The page turns each mark into an invisible break point and never breaks Japanese anywhere else (`word-break: keep-all`); spaces the book wrote are break points too, and `a / b` alternatives keep the slash with the first part. Endings of one or two kana (か, ね, が) stay attached to the part before. Card ids ignore the markers, so saved history is unaffected.
+
 Also decided while building: the default selection is **Class 1 only** (54 cards); the app is read-only (Write mode is not offered); the Look-alike round is hidden because words have no look-alike sets.
 
 ## 10. What was built

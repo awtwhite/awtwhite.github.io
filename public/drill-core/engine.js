@@ -33,7 +33,9 @@
  *                   'grade': the main button is Reveal; after the answer shows you choose Missed it
  *                   (re-queues the card, counts as a miss) or Got it (moves on clean). No Peek.
  *                   The timer then measures time to Reveal.
- *   labels          optional {reveal, missed, got}: button text in the 'grade' flow.
+ *   labels          optional {reveal, missed, got, revealAll}: button text. reveal/missed/got are used by the 'grade'
+ *                   flow; revealAll names the small button (and the finished-round button) that opens the
+ *                   round summary (default 'Reveal all', or 'Review round' in the grade flow).
  *   preview         optional boolean. Before a round starts the small Reveal all button becomes Preview all:
  *                   a page listing every card of the round (the selected groups), nothing scored.
  *   groupTitle(it)  optional -> heading text; with preview, a heading is added whenever it changes.
@@ -119,7 +121,7 @@ function create(cfg){
   const timeBand = ms => ms < 1000 ? 'good' : ms <= 3000 ? 'ok' : ms <= 5000 ? 'slow' : 'veryslow';
   const fmtSecs = ms => (ms / 1000).toFixed(1) + 's';
   const grade = cfg.flow === 'grade';
-  const L = Object.assign({reveal:'Reveal', missed:'Missed it', got:'Got it'}, cfg.labels || {});
+  const L = Object.assign({reveal:'Reveal', missed:'Try again', got:'Got it', revealAll: grade ? 'Review round' : 'Reveal all'}, cfg.labels || {});
   const timeLegend = '<div class="tlegend">' + (grade ? 'Time to reveal each card' : 'Time on each card (read mode)') + ': <span class="tm-good">under 1s</span> proficient · <span class="tm-ok">1–3s</span> ok · <span class="tm-slow">3–5s</span> needs improvement · <span class="tm-veryslow">over 5s</span> really needs improvement</div>';
   // Read-mode timing: the clock runs only while a card is on screen in Read mode, and pauses for
   // panels, Reveal all and hidden tabs. A card's time is recorded when you move on (Next or Show again).
@@ -223,6 +225,7 @@ function create(cfg){
     c.textContent = armedId === 'clear' ? 'Click again to clear' : 'Clear history';
   }
   function reset(){
+    if (S.idx < 0) return;                       // before a round starts there is nothing to reset
     const inProgress = S.view === 'drill' && S.idx >= 0 && !S.finished;
     if (inProgress && !confirmPress('reset')) return;
     restart();
@@ -260,7 +263,7 @@ function create(cfg){
         sub.textContent = lead + (reading ? cfg.prompts.read : cfg.prompts.write) + (grade ? ' Then say whether you got it; missed ones come back later.' : ' Not sure? Press Show again and it comes back later.');
       } else if (S.finished) {
         romaji.className = 'romaji msg'; romaji.textContent = 'Round complete';
-        sub.textContent = `${total} cards · ${missItems().length} to review. ${grade ? 'Press Reveal all to see how you did.' : 'Press Next to reveal all and check your page.'}`;
+        sub.textContent = `${total} cards · ${missItems().length} to review. ${grade ? `Press ${L.revealAll} to see how you did.` : 'Press Next to reveal all and check your page.'}`;
       } else {
         const it = S.deck[S.idx], v = cfg.view(it, reading, settings);
         romaji.className = 'romaji' + (v.front.glyph ? ' glyph' + frontLen(v.front.text) : v.front.text.length > 5 ? ' long' : '');
@@ -281,17 +284,18 @@ function create(cfg){
         pb.style.display = 'none';
         $('againBtn').style.display = revealed ? '' : 'none';
         $('againBtn').disabled = !active; $('againBtn').innerHTML = L.missed + '<kbd>A</kbd>';
-        $('nextBtn').innerHTML = (S.finished ? 'Reveal all' : S.idx < 0 ? 'Start' : revealed ? L.got : L.reveal) + '<kbd>Space</kbd>';
+        $('nextBtn').innerHTML = (S.finished ? L.revealAll : S.idx < 0 ? 'Start' : revealed ? L.got : L.reveal) + '<kbd>Space</kbd>';
         const bar = $('nextBtn').parentElement; bar.classList.add('grade'); bar.classList.toggle('two', revealed);
       } else {
         pb.disabled = !active; pb.classList.toggle('peeking', S.peekOn);
         pb.innerHTML = (S.peekOn ? 'Hide' : 'Peek') + '<kbd>P</kbd>';
         $('againBtn').disabled = !active;
-        $('nextBtn').innerHTML = (S.finished ? 'Reveal all' : S.idx < 0 ? 'Start' : 'Next') + '<kbd>Space</kbd>';
+        $('nextBtn').innerHTML = (S.finished ? L.revealAll : S.idx < 0 ? 'Start' : 'Next') + '<kbd>Space</kbd>';
       }
       const canPreview = !!cfg.preview && S.idx < 0;
-      $('revealBtn').innerHTML = canPreview ? 'Preview all<kbd>V</kbd>' : 'Reveal all<kbd>E</kbd>';
+      $('revealBtn').innerHTML = canPreview ? 'Preview all<kbd>V</kbd>' : L.revealAll + '<kbd>E</kbd>';
       $('revealBtn').disabled = S.idx < 0 && !cfg.preview;
+      $('resetBtn').disabled = S.idx < 0;
     } else if (S.view === 'preview') {
       // Every card of the round in book order, with group headings. Nothing is scored here.
       const items = S.source;

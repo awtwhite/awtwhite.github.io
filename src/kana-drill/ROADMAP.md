@@ -41,9 +41,9 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 ## 3. TODOs
 
 ### Housekeeping
-- [ ] Fix the stale README. It refers to `kana-drill.html`; the file is `public/kana-drill/index.html`. Update "Getting started" and "Where things are in the code".
-- [ ] Namespace localStorage keys per app (`kana-drill:settings`, `kana-drill:stats`). The settings key is currently `hiragana-drill-settings-v1`. Migrate the existing keys so nobody loses history.
-- [ ] Sidebar link in `astro.config.mjs` still uses the Starlight starter title and links ("My Docs", Example Guide). Clean up.
+- [x] Fix the stale Kana README (file name, getting started, where things are in the code; added Timer and the new storage keys).
+- [x] Namespace Kana's localStorage keys (`kana-drill:settings`, `kana-drill:stats`); the old keys are moved across once on load, so no history is lost.
+- [x] Replaced the Starlight starter placeholders: site title, GitHub link, sidebar (now one "Drill apps" group linking to `/<app>/index.html`, which works in dev too), the home page, and removed the example guide/reference pages and the template image. The repo's root `README.md` is still the Starlight starter text.
 
 ### Codebase organisation (decision made: share a core, keep separate apps)
 - [x] Create `public/drill-core/engine.js` and `ui.css` (built with Eigo Drill).
@@ -66,13 +66,14 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 - [ ] JLPT level filter (N5–N1) as an alternative to school grades.
 
 ### Nihongo Drill
-- [x] First version: Classes 1-8 as groups (counters split out), English on Peek, pink theme, 355 cards.
+- [x] First version: Classes 1-8 as groups (counters split out), English shown on Reveal, pink theme, 355 cards.
+- [x] **Line breaks in long phrases** are controlled: a `·` in `data.js` marks where a line may break (26 entries marked; spaces and slashes are handled automatically). When adding words, mark long phrases the same way; see the `data.js` header.
 - [x] **Preview all** before a round starts (every selected word, grouped, nothing scored). Optional in the engine (`preview: true`); could be offered in the other apps too.
-- [ ] **Reset before a round starts** only reshuffles the deck and shows the same Ready screen (no visible effect). Disable it until a round has started, in every app.
+- [x] **Reset** is disabled until a round has started (it only reshuffled the deck before), in every app.
 - [x] Card flow: **Reveal**, then **Try again** / **Got it** (no Peek). Time is measured to Reveal. Button names are `labels` in the app config.
 - [ ] Auto-**missed** from the timer: treat a slow Reveal (over 3s, or 5s) as a miss without asking. (Same idea as the general "auto again from timers" item.)
 - [ ] Offer the Reveal / Got it / Try again flow as an option in the other apps (Kana, Eigo, Kanji), where the engine already supports it (`flow: 'grade'`).
-- [ ] The small "Reveal all" button sits next to the new Reveal button and the names are close; consider renaming it ("Review round") in apps that use the grade flow.
+- [x] In the grade flow the small "Reveal all" button (and the finished-round button) is called "Review round"; `labels.revealAll` in the config changes it.
 - [ ] **Romaji option (small, below the Japanese word).** The book's romaji is its own spelling (jyuusho, kooen); decide between that and Hepburn converted from the kana, as in Kana Drill.
 - [ ] **Show the verb group (1)(2)(3)** as a hint on Peek. The data already has it (`vg`).
 - [ ] **Sentences group.** Phrases and sentences are tagged (`kind` = p); add a group of all of them, and an alternative lesson option (study by sentence).

@@ -11,6 +11,12 @@
  * A card's id is "<group>:<japanese>", so editing the English or reordering lines is safe.
  * Do not repeat the same Japanese text twice inside one group.
  *
+ * Line breaks on long phrases: a "·" inside the Japanese marks where a line may break; the page turns it
+ * into an invisible break point and never breaks Japanese anywhere else. A space in the text (as the book
+ * writes some phrases) is also a break point. The marker is not part of the id and is not shown. Endings of
+ * one or two kana (か, ね, が) are kept attached to the part before them. A slash between alternatives
+ * ("おとうとさん / おとうと") stays with the first part and breaks after it.
+ *
  * "@id" starts a group. Corrections / decisions made while typing it in (please check):
  *   - c1 first line: the book's English reads "word"; the ward (区) is meant ("ward").
  *   - c7 ２わりびき: the book says "2% discount", but 2割引 is 20% off, so it says 20% off here.
@@ -47,7 +53,7 @@ const NIHONGO_TEXT = `
 ていね|Teine ward|wards
 あつべつ|Atsubetsu ward|wards
 きよた|Kiyota ward|wards
-（お）ひさしぶりです|It's been a while|greetings|p
+（お）ひさし·ぶりです|It's been a while|greetings|p
 ～じん|a person of ~|people|p
 しごと|work|jobs
 かいしゃいん|company employee|jobs
@@ -78,16 +84,16 @@ const NIHONGO_TEXT = `
 そうですね|Well... / Let me think|conversation|p
 それから|and then...|connectors
 ～ください|Please ...|restaurant|p
-こちらでおめしあがりですか|Will you be eating here?|restaurant|p
+こちらで·おめしあがり·ですか|Will you be eating here?|restaurant|p
 おもちかえり|takeout|restaurant
 たんぴん|single item|restaurant
 セット|set|restaurant
 なまえ|name|personal
 じゅうしょ|address|personal
-ゆうびんばんごう|postal code|personal
-せいねんがっぴ|date of birth|personal
+ゆうびん·ばんごう|postal code|personal
+せいねん·がっぴ|date of birth|personal
 ～さい|~ years old|personal|p
-でんわばんごう|telephone number|personal
+でんわ·ばんごう|telephone number|personal
 けいたい|cell phone|personal
 できましたか|Did you finish?|conversation|p
 
@@ -109,7 +115,7 @@ const NIHONGO_TEXT = `
 よにん|4 people|counters|c
 ごにん|5 people|counters|c
 ろくにん|6 people|counters|c
-ななにん、しちにん|7 people|counters|c
+ななにん、·しちにん|7 people|counters|c
 はちにん|8 people|counters|c
 きゅうにん|9 people|counters|c
 じゅうにん|10 people|counters|c
@@ -134,7 +140,7 @@ const NIHONGO_TEXT = `
 なべ|pot|kitchen
 フライパン|frying pan|kitchen
 おたま|ladle|kitchen
-コーヒーメーカー|coffee maker|kitchen
+コーヒー·メーカー|coffee maker|kitchen
 あります|there is / there are (things)|verbs
 どこで かいましたか|Where did you buy it?|shopping|p
 ～で かいました|I bought it at ~|shopping|p
@@ -173,7 +179,7 @@ const NIHONGO_TEXT = `
 きがえます|I'll change my clothes|verbs
 へや|room|home
 こういしつ|changing room|places
-（おちゃを）いれます|I'll pour (tea)|verbs|p
+（おちゃを）·いれます|I'll pour (tea)|verbs|p
 ありました|I found it.|verbs|p
 ここ|here|location
 そこ|there|location
@@ -223,9 +229,9 @@ const NIHONGO_TEXT = `
 はなします|talk|verbs||1
 おしえます|teach|verbs||2
 シャワーを あびます|take a shower|verbs||2
-けっこんします|get married|verbs||3
-うんてんします|drive|verbs||3
-クレジットカード|credit card|shopping
+けっこん·します|get married|verbs||3
+うんてん·します|drive|verbs||3
+クレジット·カード|credit card|shopping
 
 @n4
 いっぽん|1 long thing|counters|c
@@ -249,9 +255,9 @@ const NIHONGO_TEXT = `
 はっさい|8 years old|counters|c
 きゅうさい|9 years old|counters|c
 じゅっさい/じっさい|10 years old|counters|c
-じゅういっさい|11 years old|counters|c
+じゅう·いっさい|11 years old|counters|c
 じゅうにさい|12 years old|counters|c
-じゅうはっさい|18 years old|counters|c
+じゅう·はっさい|18 years old|counters|c
 にじゅっさい/はたち|20 years old|counters|c
 なんさい|how old?|counters|c
 
@@ -260,11 +266,11 @@ const NIHONGO_TEXT = `
 よく|often|frequency
 ときどき|sometimes|frequency
 いつも|always|frequency
-かいしゃのひと|people from the company|people
+かいしゃの·ひと|people from the company|people
 たいいくかん|gymnasium|places
 バドミントン|badminton|sports
 バレーボール|volleyball|sports
-バスケットボール|basketball|sports
+バスケット·ボール|basketball|sports
 サッカー|soccer|sports
 たっきゅう|table tennis|sports
 ジョギング|jogging|sports
@@ -274,8 +280,8 @@ const NIHONGO_TEXT = `
 カラオケ|karaoke|hobbies
 うち|home|home
 やすみ|day off|time
-ゆっくりします|(to) relax|verbs||3
-ごろごろします|(to) laze around|verbs||3
+ゆっくり·します|(to) relax|verbs||3
+ごろごろ·します|(to) laze around|verbs||3
 いそがしいです|busy|adjectives
 
 @c6
@@ -293,7 +299,7 @@ const NIHONGO_TEXT = `
 ちかい|near|adjectives
 とおい|far|adjectives
 ぎんこう|bank|places
-ゆうびんきょく|post office|places
+ゆうびん·きょく|post office|places
 びょういん|hospital|places
 がっこう|school|places
 かいしゃ|company|places
@@ -323,12 +329,12 @@ const NIHONGO_TEXT = `
 にじゅっぷん|20 minutes|counters|c
 なんぷん|how many minutes?|counters|c
 いちじかん|1 hour|counters|c
-いちじかんはん|1.5 hours|counters|c
+いちじかん·はん|1.5 hours|counters|c
 にじかん|2 hours|counters|c
 よじかん|4 hours|counters|c
 くじかん|9 hours|counters|c
 じゅうじかん|10 hours|counters|c
-じゅうよじかん|14 hours|counters|c
+じゅうよ·じかん|14 hours|counters|c
 なんじかん|how many hours?|counters|c
 
 @c7
@@ -353,13 +359,13 @@ Tシャツ|T-shirt|clothes
 ジャケット|jacket|clothes
 コート|coat|clothes
 もらいます|receive|verbs||1
-チョコレートケーキ|chocolate cake|food
+チョコレート·ケーキ|chocolate cake|food
 チーズケーキ|cheesecake|food
 おにぎり|rice ball|food
 こんぶ|kelp|food
 たらこ|cod roe|food
 うめ|plum|food
-おねがいします|please|conversation|p|3
+おねがい·します|please|conversation|p|3
 こちら|here|location
 あたためますか|Would you like it warmed?|shopping|p
 けっこうです|No thank you|conversation|p
@@ -368,11 +374,11 @@ Tシャツ|T-shirt|clothes
 おつけしますか|Would you like some?|shopping|p
 だいじょうぶです|It's okay (meaning I don't need any)|conversation|p
 Suica|Suica|shopping
-タッチしてください|Please touch|shopping|p
+タッチして·ください|Please touch|shopping|p
 わりびき|discount|shopping
 ２わりびき|20% off|shopping
-じゅっパーセント|10%|shopping
-じゅっパーセントびき|10% discount|shopping
+じゅっ·パーセント|10%|shopping
+じゅっ·パーセントびき|10% discount|shopping
 50えんびき|50 yen discount|shopping
 はんがく|half price|shopping
 
@@ -408,7 +414,7 @@ Suica|Suica|shopping
 おみやげ|souvenirs|shopping
 しゃしん|photos|hobbies
 とります|take (a photo)|verbs||1
-いちにちじゅう|all day long|time
+いちにち·じゅう|all day long|time
 たいへんです|hard / difficult / tough|adjectives
 すごい|amazing|adjectives
 はじめて|first time|time

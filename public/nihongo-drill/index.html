@@ -13,6 +13,8 @@
    Sized so a 9-character word fits on one line: that is 95% of the list; only longer phrases wrap.
    The card text area is min(680px, 100vw - 80px) wide, and 9.2 allows a little slack. */
 .romaji.glyph,.romaji.glyph.len1,.romaji.glyph.len2,.romaji.glyph.len3{font-size:min(4.6rem,calc((100vw - 100px) / 9.2));line-height:1.25}
+/* Japanese breaks only at the marked points; if one part is wider than the line it may still break inside it */
+.romaji.glyph,#grid .tile .k,.wchip .kh{word-break:keep-all;overflow-wrap:anywhere}
 /* Reveal all: bigger tiles, three per row (two on phones), every word at one size so none wraps.
    --tw is the width of a tile's text area; the word size is that width / 9.6, capped at 28px. */
 #grid{--cols:2;grid-template-columns:repeat(var(--cols),1fr)}
@@ -109,6 +111,15 @@
 // ---------- Words (parsed from data.js) ----------
 // Line format: japanese | english | topic | kind (w/p/c) | verb group. "@id" starts a group.
 const ROWS = {}, ROW_ORDER = [], BY_SID = {};
+
+// Where a line may break inside Japanese text. The page never breaks Japanese except at these points
+// (CSS word-break: keep-all). "·" in data.js marks a point; so does a space the book wrote.
+const BREAK = '·', ZWSP = '\u200B', NBSP = '\u00A0';
+const breakable = raw => raw
+  .split(BREAK).join(ZWSP)                     // marked point -> invisible break
+  .replace(/ \/ /g, NBSP + '/ ')               // "a / b": the slash stays with a, the line breaks after it
+  .replace(/(?<!\/) /g, ZWSP)                  // other spaces (from the book) -> invisible break
+  .replace(/\/(?=[^ \u200B])/g, '/' + ZWSP);   // "a/b": break allowed after the slash
 NIHONGO_GROUPS.forEach(g => { ROWS[g.id] = Object.assign({}, g, {items: []}); ROW_ORDER.push(g.id); });
 (() => {
   let cur = null;
@@ -116,10 +127,10 @@ NIHONGO_GROUPS.forEach(g => { ROWS[g.id] = Object.assign({}, g, {items: []}); RO
     const line = raw.trim();
     if (!line) return;
     if (line[0] === '@') { cur = line.slice(1); if (!ROWS[cur]) throw new Error('Unknown group ' + cur); return; }
-    const [ja, en, topic, kind, vg] = line.split('|');
-    const sid = cur + ':' + ja;
-    if (BY_SID[sid]) throw new Error('Duplicate word in ' + cur + ': ' + ja);
-    const it = {sid, id: sid, ja, en, topic: topic || '', kind: kind || 'w', vg: vg || '', row: cur, key: cur};
+    const [rawJa, en, topic, kind, vg] = line.split('|');
+    const sid = cur + ':' + rawJa.split(BREAK).join('');          // the id ignores the break markers
+    if (BY_SID[sid]) throw new Error('Duplicate word in ' + cur + ': ' + rawJa);
+    const it = {sid, id: sid, ja: breakable(rawJa), en, topic: topic || '', kind: kind || 'w', vg: vg || '', row: cur, key: cur};
     ROWS[cur].items.push(it); BY_SID[sid] = it;
   });
 })();
