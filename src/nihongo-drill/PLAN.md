@@ -121,9 +121,17 @@ Sapporo wards and directions · Jobs · Food and restaurant · Personal details 
 
 12. **Line breaks inside long phrases:** parts are marked by hand with a `·` in `data.js` (26 entries: phrases and compound words), because the browser's own Japanese segmentation is poor on kana-only text. The page turns each mark into an invisible break point and never breaks Japanese anywhere else (`word-break: keep-all`); spaces the book wrote are break points too, and `a / b` alternatives keep the slash with the first part. Endings of one or two kana (か, ね, が) stay attached to the part before. Card ids ignore the markers, so saved history is unaffected.
 
+13. **Study page and classifications** (replaces Preview all). Every word carries one **theme**, one **word type** and a **book class**, plus flags (loanword is derived from the katakana; Sapporo is the ward names):
+    - *Theme* (12): Food & drink, People & family, Home & places, Getting around, Shopping & clothes, Free time, School & language, Time & how often, Counters, Describing words, Actions, Talking. They roll up the 30 topic tags, which show as sub-sections.
+    - *Word type* (8): nouns & pronouns, verbs (sub-grouped by verb group), i-adjectives, na-adjectives, adverbs & time words, particles & connectors, phrases & sentences, counters.
+    - *Class*: the book's classes 1-8, with the counters split out.
+    - *Weak words*: from your drill history (missing a lot, needs work, getting there).
+    - Counters are sub-grouped by what they count (derived from the English).
+    The Study page shows everything (with a My selection filter), flips on tap, can hide all English to self-test, searches, and starts a round on any section. Settings can choose what to practise by class, theme or type; each keeps its own ticks. The Study page is drawn by the Nihongo page itself through an optional engine hook (`study`), so the other apps are unchanged.
+
 Also decided while building: the default selection is **Class 1 only** (54 cards); the app is read-only (Write mode is not offered); the Look-alike round is hidden because words have no look-alike sets.
 
-## 10. What was built
+## 10. What was built (first version)
 
 - `public/nihongo-drill/index.html` and `data.js` (355 cards: 262 class words + 93 counter forms).
 - Shared-core changes: optional look-alike round; text-width size steps for the card front, Reveal tiles and chips (`len1`-`len4`, measured in ems so Latin digits and kana are treated differently); an `xs` answer size for long English; the pink theme in `ui.css`; the app switcher entry; the sidebar link.

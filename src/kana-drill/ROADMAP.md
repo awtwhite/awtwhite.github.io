@@ -75,9 +75,13 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` done
 - [ ] Offer the Reveal / Got it / Try again flow as an option in the other apps (Kana, Eigo, Kanji), where the engine already supports it (`flow: 'grade'`).
 - [x] In the grade flow the small "Reveal all" button (and the finished-round button) is called "Review round"; `labels.revealAll` in the config changes it.
 - [ ] **Romaji option (small, below the Japanese word).** The book's romaji is its own spelling (jyuusho, kooen); decide between that and Hepburn converted from the kana, as in Kana Drill.
-- [ ] **Show the verb group (1)(2)(3)** as a hint on Peek. The data already has it (`vg`).
-- [ ] **Sentences group.** Phrases and sentences are tagged (`kind` = p); add a group of all of them, and an alternative lesson option (study by sentence).
-- [ ] **Topic groups in Settings** (wards and directions, jobs, food and restaurant, personal details, counters, family, home and places, animals, vegetables, location words, verbs, hobbies and sports, clothes and shopping, time, phrases). Every word already has a `topic` tag, so this needs no re-entry.
+- [ ] **Show the verb group (1)(2)(3)** as a hint when a verb is revealed. (It is already shown in the Study page's Type view, grouped under Verbs.)
+- [x] **Sentences group:** Study > Type > "Phrases & sentences" (27) lists them all, and Settings > Choose by Type can drill just them. [ ] Still to do: an alternative lesson option (study by sentence).
+- [x] **Theme and word-type groups** (Study page and Settings > Choose by). Every word has one theme (12, rolled up from 30 topic tags), one word type (noun, verb, i- or na-adjective, adverb, connector, phrase, counter) and a book class; loanwords and Sapporo words are filters.
+- [x] **Study page** (replaces Preview all): browse by Theme, Type, Class or your Weak words; tap a word to flip it, or Hide English to test yourself; search; filter chips (Loanwords, Sapporo, My selection); Practise these on any section.
+- [ ] **Check the word types and themes in `data.js`** (hand-checked pre-fill: 168 nouns, 34 verbs, 11 i-adjectives, 7 na-adjectives, 8 adverbs, 7 connectors, 27 phrases, 93 counters). Counters are sub-grouped by what they count, worked out from the English.
+- [ ] Study page ideas: star words as "needs work" (feeds Weak spots); reverse mode (English first, recall the Japanese); a "seen / not seen" status (needs the drill to remember cards it has shown; the weak list only keeps words with a score above zero); remember the chosen view and open sections.
+- [ ] Verbs: group by plain form vs ます form, or show the other forms.
 - [ ] Review the Sapporo-specific words (the wards and some shop/food terms); decide whether they stay in the core list or move to an optional "Sapporo" group.
 - [ ] **Check the transcription against the book.** Three deliberate changes to confirm: 2割引 written as "20% off" (the book says 2%); 10% and 10%引 written out in kana from the book's romaji; counters given descriptive English.
 - [ ] Optional: Write mode (English to Japanese) once Read mode is settled.
