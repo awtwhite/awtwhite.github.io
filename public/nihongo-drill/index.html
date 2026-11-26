@@ -183,8 +183,16 @@ const SETS = [
   {id:'counters', name:'Counters', rows: ROW_ORDER.filter(id =>  ROWS[id].counters)},
 ];
 
-// Which words are in the Settings selection (by class for now)
-const inSelection = (it, s) => s.rows.includes(it.row);
+// What to practise can be chosen by class (the book), theme, or word type. settings.by says which one is
+// active; each keeps its own ticks (rows = classes, themes, types) so switching back loses nothing.
+const axisOf = (it, by) => by === 'theme' ? it.theme : by === 'type' ? it.type : it.row;
+const axisIds = s => s.by === 'theme' ? s.themes : s.by === 'type' ? s.types : s.rows;
+const inSelection = (it, s) => axisIds(s).includes(axisOf(it, s.by));
+const selectedItems = s => ITEMS.filter(it => inSelection(it, s)).map(it => ({...it, key: axisOf(it, s.by)}));   // key = what "by group" order keeps together
+const countBy = k => ITEMS.reduce((m, it) => (m[it[k]] = (m[it[k]] || 0) + 1, m), {});
+const THEME_N = countBy('theme'), TYPE_N = countBy('type');
+const themeBlurb = t => t.topics.map(x => NIHONGO_TOPIC_NAMES[x] || x).join(', ');
+const chip = (attr, id, on, name, n, blurb) => `<button class="chip wide${on ? ' on' : ''}" data-${attr}="${id}" aria-pressed="${on}"><span>${name} <span style="opacity:.55">${n}</span></span><small>${blurb}</small></button>`;
 
 // ---------- Study page ----------
 // Browse every word grouped by theme, word type, class or your weak words. Tap a word to flip it
@@ -284,14 +292,16 @@ DrillCore.create({
   flow: 'grade',     // Reveal, then Try again / Got it (no Peek)
   study: {label: 'Study', render: renderStudy},   // before a round starts: browse the words, flip to check
   labels: {reveal:'Reveal', missed:'Try again', got:'Got it'},
-  defaults: {mode:'read', order:'row', timer:true, rows:['c1']},
+  defaults: {mode:'read', order:'row', timer:true, by:'class', rows:['c1'], themes:THEME_IDS.slice(), types:TYPE_IDS.slice()},
   sanitize(s){
     if (!s || !Array.isArray(s.rows)) return null;
     const rows = s.rows.filter(id => ROWS[id]);
-    if (!rows.length) return null;
-    return {mode:'read', order: s.order === 'mixed' ? 'mixed' : 'row', timer: s.timer !== false, rows};
+    const keep = (list, ids) => Array.isArray(list) ? list.filter(id => ids.includes(id)) : ids.slice();   // settings saved before themes/types existed: all ticked
+    const out = {mode:'read', order: s.order === 'mixed' ? 'mixed' : 'row', timer: s.timer !== false,
+                 by: ['class', 'theme', 'type'].includes(s.by) ? s.by : 'class', rows, themes: keep(s.themes, THEME_IDS), types: keep(s.types, TYPE_IDS)};
+    return axisIds(out).length ? out : null;                                                                // nothing ticked: fall back to the defaults
   },
-  fullItems: s => s.rows.flatMap(id => ROWS[id].items),
+  fullItems: selectedItems,
   inScope: (it, s) => inSelection(it, s),
   itemFromSid: sid => BY_SID[sid] || null,
   brand: () => ['語', 'Nihongo Drill'],
@@ -304,31 +314,42 @@ DrillCore.create({
   fullHint: (s, n) => `${n} words from your selected groups.`,
 
   settingsHTML(d){
-    const sel = new Set(d.rows);
+    const sel = new Set(axisIds(d));
+    const block = (id, name, chips) => `
+    <div class="group">
+      <div class="ghead"><span class="lbl">${name}</span>
+        <span><button class="link" data-all="${id}">All</button><button class="link" data-none="${id}">None</button></span></div>
+      <div class="chips">${chips}</div>
+    </div>`;
+    const blocks = d.by === 'theme' ? block('themes', 'Themes', NIHONGO_THEMES.map(t => chip('theme', t.id, sel.has(t.id), t.name, THEME_N[t.id] || 0, themeBlurb(t))).join(''))
+                 : d.by === 'type'  ? block('types', 'Word types', NIHONGO_TYPES.map(t => chip('type', t.id, sel.has(t.id), t.name, TYPE_N[t.id] || 0, t.blurb)).join(''))
+                 : SETS.map(g => block(g.id, g.name, g.rows.map(id => chip('row', id, sel.has(id), ROWS[id].name, ROWS[id].items.length, ROWS[id].blurb)).join(''))).join('');
     return `
     ${DrillCore.section('What to practise')}
-    ${SETS.map(g => `
-    <div class="group">
-      <div class="ghead"><span class="lbl">${g.name}</span>
-        <span><button class="link" data-all="${g.id}">All</button><button class="link" data-none="${g.id}">None</button></span></div>
-      <div class="chips">${g.rows.map(id => { const r = ROWS[id];
-        return `<button class="chip wide${sel.has(id) ? ' on' : ''}" data-row="${id}" aria-pressed="${sel.has(id)}"><span>${r.name} <span style="opacity:.55">${r.items.length}</span></span><small>${r.blurb}</small></button>`; }).join('')}</div>
-    </div>`).join('')}
+    <div class="opt"><div><div class="lbl">Choose by</div><div class="hint">Pick words by the book's classes, by theme (food, family, getting around...) or by word type (verbs, nouns...). Each keeps its own ticks.</div></div>
+      ${seg('by', d.by, [['class','Class'],['theme','Theme'],['type','Type']])}</div>
+    ${blocks}
     ${DrillCore.section('How the round runs')}
     <div class="opt"><div><div class="lbl">Order</div><div class="hint">By group: finish one shuffled group before the next.</div></div>
       ${seg('order', d.order, ORDERS)}</div>
     <div class="opt"><div><div class="lbl">Timer</div><div class="hint">Times how long you take to reveal each card and shows it in Reveal all.</div></div>
       ${seg('timer', d.timer ? '1' : '0', [['1','On'],['0','Off']])}</div>`;
   },
-  settingsCount: d => d.rows.reduce((n, id) => n + ROWS[id].items.length, 0),
+  settingsCount: d => ITEMS.filter(it => inSelection(it, d)).length,
   onSettingsClick(b, d){
     if (b.dataset.set === 'timer') { d.timer = b.dataset.v === '1'; return; }
     if (b.dataset.set) { d[b.dataset.set] = b.dataset.v; return; }
-    const set = new Set(d.rows);
-    if (b.dataset.row) set.has(b.dataset.row) ? set.delete(b.dataset.row) : set.add(b.dataset.row);
-    else if (b.dataset.all) SETS.find(g => g.id === b.dataset.all).rows.forEach(r => set.add(r));
-    else if (b.dataset.none) SETS.find(g => g.id === b.dataset.none).rows.forEach(r => set.delete(r));
-    d.rows = ROW_ORDER.filter(id => set.has(id));
+    // one ticked list per way of choosing: classes (rows), themes, types
+    const A = b.dataset.row || b.dataset.all === 'classes' || b.dataset.all === 'counters' || b.dataset.none === 'classes' || b.dataset.none === 'counters'
+              ? {key:'rows', all: ROW_ORDER}
+              : (b.dataset.theme || b.dataset.all === 'themes' || b.dataset.none === 'themes') ? {key:'themes', all: THEME_IDS} : {key:'types', all: TYPE_IDS};
+    const set = new Set(d[A.key]), one = b.dataset.row || b.dataset.theme || b.dataset.type;
+    if (one) set.has(one) ? set.delete(one) : set.add(one);
+    else {
+      const ids = b.dataset.all || b.dataset.none, group = SETS.find(g => g.id === ids);
+      (group ? group.rows : A.all).forEach(id => (b.dataset.all ? set.add(id) : set.delete(id)));
+    }
+    d[A.key] = A.all.filter(id => set.has(id));
   },
 });
 </script>
