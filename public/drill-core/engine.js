@@ -38,6 +38,9 @@
  *                   round summary (default 'Reveal all', or 'Review round' in the grade flow).
  *   preview         optional boolean. Before a round starts the small Reveal all button becomes Preview all:
  *                   a page listing every card of the round (the selected groups), nothing scored.
+ *   study           optional {label, render(el, api)}. Replaces preview with a page the app draws itself into
+ *                   the element #study (see nihongo-drill). api = {back, start, practice(items), settings(), stats()}.
+ *                   practice(items) starts a round on exactly those items; start() begins the normal round.
  *   groupTitle(it)  optional -> heading text; with preview, a heading is added whenever it changes.
  *   modes           optional; which of ['write','read'] the app offers (default both). With one
  *                   mode the Write/Read toggle is hidden and the M shortcut does nothing.
@@ -84,7 +87,7 @@ function create(cfg){
   const weakItems = () => weakList().slice(0, 20).map(([sid]) => cfg.itemFromSid(sid));
 
   // ---------- Rounds ----------
-  const ROUND_LABEL = {full:'', look:'look-alikes', weak:'weak spots', misses:'misses'};
+  const ROUND_LABEL = {full:'', look:'look-alikes', weak:'weak spots', misses:'misses', custom:'your pick'};
   const S = {deck:[], idx:-1, finished:false, peeked:new Set(), again:new Set(), scored:new Set(), peekOn:false, round:'full', source:[], view:'drill',
              againCount:new Map(),   // card sid -> times "Show again" was pressed this round
              sessionAgain:{},       // same, running total for the whole page session (never reset, not saved)
@@ -105,6 +108,7 @@ function create(cfg){
     if (S.round === 'look') startLook();
     else if (S.round === 'weak' && weakItems().length) startWeak();
     else if (S.round === 'misses') startRound(S.source, 'misses');
+    else if (S.round === 'custom') startRound(S.source, 'custom');
     else startFull();
   }
 
@@ -194,9 +198,19 @@ function create(cfg){
     if (!canContinue()) return; S.view = 'drill'; render();
   }
   function openPreview(){
-    if (!cfg.preview || S.view !== 'drill' || S.idx >= 0) return;
-    S.view = 'preview'; render(); window.scrollTo(0, 0);
+    if (!(cfg.preview || cfg.study) || S.view !== 'drill' || S.idx >= 0) return;
+    S.view = 'preview'; render();
+    if (cfg.study) cfg.study.render($('study'), studyApi);
+    window.scrollTo(0, 0);
   }
+  // What a Study page (cfg.study) can do: leave, begin the normal round, or drill exactly these items
+  const studyApi = {
+    back: () => backToRound(),
+    start: () => previewStart(),
+    practice: items => { if (items.length) startRound(items.map(it => ({...it})), 'custom'); },
+    settings: () => clone(settings),
+    stats: () => clone(stats),
+  };
   function previewStart(){ S.view = 'drill'; next(); }                       // from the preview straight into the first card
 
   function missItems(){
@@ -245,8 +259,10 @@ function create(cfg){
     $('barFill').style.width = total ? (shown / total * 100) + '%' : '0';
 
     const drill = S.view === 'drill';
+    const inStudy = !!cfg.study && S.view === 'preview';
     $('drill').classList.toggle('off', !drill);
-    $('reveal').classList.toggle('on', !drill);
+    $('reveal').classList.toggle('on', !drill && !inStudy);
+    if ($('study')) $('study').classList.toggle('on', inStudy);
 
     if (drill) {
       const romaji = $('romaji'), sub = $('sub'), answer = $('kana'), badge = $('scripttag');
@@ -257,9 +273,9 @@ function create(cfg){
       if (asub) { asub.textContent = ''; asub.className = 'answer-sub'; }
       if (S.idx < 0) {
         romaji.className = 'romaji msg';
-        romaji.textContent = {full:'Ready?', look:'Look-alike drill', weak:'Weak spots', misses:'Misses round'}[S.round];
+        romaji.textContent = {full:'Ready?', look:'Look-alike drill', weak:'Weak spots', misses:'Misses round', custom:'Ready?'}[S.round];
         const lead = S.round === 'look' ? `${total} easily confused characters, grouped in sets so you compare them. `
-                   : S.round === 'weak' ? `Your ${total} trickiest characters. ` : `${total} cards, shuffled. `;
+                   : S.round === 'weak' ? `Your ${total} trickiest characters. ` : S.round === 'custom' ? `${total} cards from the group you picked, shuffled. ` : `${total} cards, shuffled. `;
         sub.textContent = lead + (reading ? cfg.prompts.read : cfg.prompts.write) + (grade ? ' Then say whether you got it; missed ones come back later.' : ' Not sure? Press Show again and it comes back later.');
       } else if (S.finished) {
         romaji.className = 'romaji msg'; romaji.textContent = 'Round complete';
@@ -292,10 +308,12 @@ function create(cfg){
         $('againBtn').disabled = !active;
         $('nextBtn').innerHTML = (S.finished ? L.revealAll : S.idx < 0 ? 'Start' : 'Next') + '<kbd>Space</kbd>';
       }
-      const canPreview = !!cfg.preview && S.idx < 0;
-      $('revealBtn').innerHTML = canPreview ? 'Preview all<kbd>V</kbd>' : L.revealAll + '<kbd>E</kbd>';
-      $('revealBtn').disabled = S.idx < 0 && !cfg.preview;
+      const canPreview = !!(cfg.preview || cfg.study) && S.idx < 0;
+      $('revealBtn').innerHTML = canPreview ? (cfg.study ? cfg.study.label : 'Preview all') + '<kbd>V</kbd>' : L.revealAll + '<kbd>E</kbd>';
+      $('revealBtn').disabled = S.idx < 0 && !(cfg.preview || cfg.study);
       $('resetBtn').disabled = S.idx < 0;
+    } else if (inStudy) {
+      // the app's own Study page draws itself (cfg.study.render)
     } else if (S.view === 'preview') {
       // Every card of the round in book order, with group headings. Nothing is scored here.
       const items = S.source;
@@ -385,7 +403,10 @@ function create(cfg){
   document.addEventListener('keydown', e => {
     if (anyOverlay()) { if (e.key === 'Escape') closeOverlays(); return; }
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const tag = e.target && e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;      // typing, not a shortcut
     const k = e.key.toLowerCase();
+    if (cfg.study && S.view === 'preview' && k !== 'escape') return;             // the Study page is for reading: leave Space and arrows to the browser
     if (k === ' ' || k === 'enter' || k === 'arrowright') { e.preventDefault(); advance(); }
     else if (k === 'p' && !grade) peek();
     else if (k === 'a') showAgain();
